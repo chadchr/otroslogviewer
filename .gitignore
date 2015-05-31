@@ -1,5 +1,8 @@
 /classpath.txt
 .gradle
+.classpath
+**/.settings/**/*.*
+.project
 .*.sw?
 *~
 *.bak
@@ -10,3 +13,6 @@ build
 /gradle-app.setting
 **/*.iml
 **/.idea
+**/*.class
+OtrosLogViewer-app/bin/**/*.*
+OtrosStarter/bin/**/*.*
