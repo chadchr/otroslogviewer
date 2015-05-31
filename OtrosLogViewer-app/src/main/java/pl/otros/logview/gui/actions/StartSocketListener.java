@@ -15,18 +15,33 @@
  */
 package pl.otros.logview.gui.actions;
 
+import java.awt.event.ActionEvent;
+import java.util.Collection;
+
+import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTable;
+import javax.swing.SpinnerNumberModel;
+
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.commons.configuration.BaseConfiguration;
+
 import pl.otros.logview.BufferingLogDataCollectorProxy;
-import pl.otros.logview.gui.*;
+import pl.otros.logview.gui.ConfKeys;
+import pl.otros.logview.gui.Icons;
+import pl.otros.logview.gui.LogViewPanelWrapper;
+import pl.otros.logview.gui.OtrosApplication;
+import pl.otros.logview.gui.StatusObserver;
 import pl.otros.logview.gui.table.TableColumns;
 import pl.otros.logview.importer.LogImporter;
 import pl.otros.logview.pluginable.AllPluginables;
 import pl.otros.logview.reader.SocketLogReader;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.util.Collection;
 
 public class StartSocketListener extends OtrosAction {
 
@@ -90,8 +105,9 @@ public class StartSocketListener extends OtrosAction {
       names[i] = importers[i].getName();
     }
 
+    int socketPort = this.getOtrosApplication().getConfiguration().getInteger(ConfKeys.DEFAULTS_SOCKETPORT, 50505);
     JComboBox box = new JComboBox(names);
-    SpinnerNumberModel numberModel = new SpinnerNumberModel(50505, 1025, 65000, 1);
+    SpinnerNumberModel numberModel = new SpinnerNumberModel(socketPort, 1025, 65000, 1);
     JSpinner jSpinner = new JSpinner(numberModel);
     MigLayout migLayout = new MigLayout();
     JPanel panel = new JPanel(migLayout);
@@ -119,7 +135,9 @@ public class StartSocketListener extends OtrosAction {
       return null;
     }
 
-    return new LogImporterAndPort(importers[box.getSelectedIndex()], numberModel.getNumber().intValue());
+    socketPort = numberModel.getNumber().intValue();
+    this.getOtrosApplication().getConfiguration().setProperty(ConfKeys.DEFAULTS_SOCKETPORT, Integer.valueOf(socketPort));
+    return new LogImporterAndPort(importers[box.getSelectedIndex()], socketPort);
   }
 
   public static class LogImporterAndPort {
