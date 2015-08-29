@@ -16,7 +16,9 @@
 package pl.otros.logview.gui.actions;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JComboBox;
@@ -38,10 +40,12 @@ import pl.otros.logview.gui.Icons;
 import pl.otros.logview.gui.LogViewPanelWrapper;
 import pl.otros.logview.gui.OtrosApplication;
 import pl.otros.logview.gui.StatusObserver;
+import pl.otros.logview.gui.config.LogTableFormatConfigView;
 import pl.otros.logview.gui.table.TableColumns;
 import pl.otros.logview.importer.LogImporter;
 import pl.otros.logview.pluginable.AllPluginables;
 import pl.otros.logview.reader.SocketLogReader;
+import pl.otros.swing.table.ColumnLayout;
 
 public class StartSocketListener extends OtrosAction {
 
@@ -68,15 +72,34 @@ public class StartSocketListener extends OtrosAction {
       return;
     }
 
-		StatusObserver observer = getOtrosApplication().getStatusObserver();
-		if (logViewPanelWrapper == null) {
-      logViewPanelWrapper = new LogViewPanelWrapper("Socket", null, TableColumns.values(),getOtrosApplication());
+    StatusObserver observer = getOtrosApplication().getStatusObserver();
+    if (logViewPanelWrapper == null) {
+        TableColumns[] tableColumnsToUse = TableColumns.values();
+        String useLayout = getOtrosApplication().getConfiguration().getString(ConfKeys.DEFAULTS_USELAYOUT, null);
+        if (useLayout != null) {
+            final List<ColumnLayout> columnLayouts = LogTableFormatConfigView.loadColumnLayouts(getOtrosApplication().getConfiguration());
+            for (ColumnLayout columnLayout : columnLayouts) {
+                if (columnLayout.getName().equals(useLayout)) {
+                    List<TableColumns> visCols = new ArrayList<TableColumns>();
+                    List<String> colNames = columnLayout.getColumns();
+                    for (String colName : colNames) {
+                        TableColumns tc = TableColumns.getColumnByName(colName);
+                        if (tc != null) {
+                            visCols.add(tc);
+                        }
+                    }
+                    tableColumnsToUse =  visCols.toArray(new TableColumns[visCols.size()]);
+                    break;
+                }
+            }
+        }
+        logViewPanelWrapper = new LogViewPanelWrapper("Socket", null, tableColumnsToUse, getOtrosApplication());
 
-      logViewPanelWrapper.goToLiveMode();
-      BaseConfiguration configuration = new BaseConfiguration();
-      configuration.addProperty(ConfKeys.TAILING_PANEL_PLAY, true);
-      configuration.addProperty(ConfKeys.TAILING_PANEL_FOLLOW, true);
-      logDataCollector = new BufferingLogDataCollectorProxy(logViewPanelWrapper.getDataTableModel(), 4000, configuration);
+        logViewPanelWrapper.goToLiveMode();
+        BaseConfiguration configuration = new BaseConfiguration();
+        configuration.addProperty(ConfKeys.TAILING_PANEL_PLAY, true);
+        configuration.addProperty(ConfKeys.TAILING_PANEL_FOLLOW, true);
+        logDataCollector = new BufferingLogDataCollectorProxy(logViewPanelWrapper.getDataTableModel(), 4000, configuration);
     }
 
 

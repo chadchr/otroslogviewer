@@ -16,7 +16,63 @@
 
 package pl.otros.logview.gui;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.GrayFilter;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
+
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.DataConfiguration;
 import org.apache.commons.configuration.event.ConfigurationEvent;
@@ -26,14 +82,47 @@ import org.jdesktop.swingx.JXComboBox;
 import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import org.jdesktop.swingx.table.ColumnControlButton;
+
 import pl.otros.logview.LogData;
 import pl.otros.logview.LogDataCollector;
 import pl.otros.logview.MarkerColors;
 import pl.otros.logview.Note;
-import pl.otros.logview.accept.*;
+import pl.otros.logview.accept.AcceptCondition;
+import pl.otros.logview.accept.FilteredAcceptCondition;
+import pl.otros.logview.accept.HigherIdAcceptCondition;
+import pl.otros.logview.accept.LevelLowerAcceptCondition;
+import pl.otros.logview.accept.LowerIdAcceptCondition;
+import pl.otros.logview.accept.PropertyAcceptCondition;
+import pl.otros.logview.accept.SelectedClassAcceptCondition;
+import pl.otros.logview.accept.SelectedEventsAcceptCondition;
+import pl.otros.logview.accept.SelectedThreadAcceptCondition;
 import pl.otros.logview.api.plugins.MenuActionProvider;
-import pl.otros.logview.filter.*;
-import pl.otros.logview.gui.actions.*;
+import pl.otros.logview.filter.CallHierarchyLogFilter;
+import pl.otros.logview.filter.ClassFilter;
+import pl.otros.logview.filter.FilterPanel;
+import pl.otros.logview.filter.LogFilter;
+import pl.otros.logview.filter.LogFilterValueChangeListener;
+import pl.otros.logview.filter.LoggerNameFilter;
+import pl.otros.logview.filter.PropertyFilter;
+import pl.otros.logview.filter.ThreadFilter;
+import pl.otros.logview.filter.TimeFilter;
+import pl.otros.logview.gui.actions.AutomaticMarkUnamrkActionListener;
+import pl.otros.logview.gui.actions.ClearMarkingsAction;
+import pl.otros.logview.gui.actions.CopySelectedText;
+import pl.otros.logview.gui.actions.CopyStyledMessageDetailAction;
+import pl.otros.logview.gui.actions.FocusOnEventsAfter;
+import pl.otros.logview.gui.actions.FocusOnEventsBefore;
+import pl.otros.logview.gui.actions.FocusOnSelectedClassesAction;
+import pl.otros.logview.gui.actions.FocusOnSelectedLoggerNameAction;
+import pl.otros.logview.gui.actions.FocusOnSelectedPropertyAction;
+import pl.otros.logview.gui.actions.FocusOnThisThreadAction;
+import pl.otros.logview.gui.actions.IgnoreSelectedEventsClasses;
+import pl.otros.logview.gui.actions.MarkRowAction;
+import pl.otros.logview.gui.actions.OtrosAction;
+import pl.otros.logview.gui.actions.RemoveByAcceptanceCriteria;
+import pl.otros.logview.gui.actions.ShowCallHierarchyAction;
+import pl.otros.logview.gui.actions.TableResizeActionListener;
+import pl.otros.logview.gui.actions.UnMarkRowAction;
 import pl.otros.logview.gui.actions.table.MarkRowBySpaceKeyListener;
 import pl.otros.logview.gui.config.LogTableFormatConfigView;
 import pl.otros.logview.gui.markers.AutomaticMarker;
@@ -43,35 +132,30 @@ import pl.otros.logview.gui.message.update.MessageDetailListener;
 import pl.otros.logview.gui.note.NoteEvent;
 import pl.otros.logview.gui.note.NoteEvent.EventType;
 import pl.otros.logview.gui.note.NoteObserver;
-import pl.otros.logview.gui.renderers.*;
+import pl.otros.logview.gui.renderers.DateRenderer;
+import pl.otros.logview.gui.renderers.LevelRenderer;
+import pl.otros.logview.gui.renderers.MarkTableEditor;
+import pl.otros.logview.gui.renderers.MarkTableRenderer;
+import pl.otros.logview.gui.renderers.NoteRenderer;
+import pl.otros.logview.gui.renderers.NoteTableEditor;
+import pl.otros.logview.gui.renderers.Renderers;
+import pl.otros.logview.gui.renderers.TableMarkDecoratorRenderer;
+import pl.otros.logview.gui.renderers.TimeDeltaRenderer;
 import pl.otros.logview.gui.table.JTableWith2RowHighliting;
 import pl.otros.logview.gui.table.TableColumns;
 import pl.otros.logview.gui.util.JumpToCodeSelectionListener;
-import pl.otros.logview.pluginable.*;
+import pl.otros.logview.pluginable.AllPluginables;
+import pl.otros.logview.pluginable.PluginableElement;
+import pl.otros.logview.pluginable.PluginableElementEventListener;
+import pl.otros.logview.pluginable.PluginableElementNameComparator;
+import pl.otros.logview.pluginable.PluginableElementsContainer;
+import pl.otros.logview.pluginable.SynchronizePluginableContainerListener;
 import pl.otros.swing.rulerbar.OtrosJTextWithRulerScrollPane;
 import pl.otros.swing.rulerbar.RulerBarHelper;
 import pl.otros.swing.table.ColumnLayout;
+import pl.otros.swing.table.TablesUtils;
 import pl.otros.swing.text.FullWidthJTextPane;
 import pl.otros.vfs.browser.table.FileSize;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableRowSorter;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class LogViewPanel extends JPanel implements LogDataCollector {
 
@@ -216,8 +300,15 @@ public class LogViewPanel extends JPanel implements LogDataCollector {
         for (TableColumn tableColumn : columns) {
             table.getColumnExt(tableColumn.getIdentifier()).setVisible(false);
         }
+        int colIdx=0;
         for (TableColumns tableColumns : visibleColumns) {
             table.getColumnExt(tableColumns).setVisible(true);
+            final int index = TablesUtils.findColumnIndexByHeader(table.getColumnModel(), tableColumns.getName());
+            if (index > -1) {
+              LOGGER.info("Moving " + index + " to " + colIdx);
+              table.moveColumn(index, colIdx);
+            }
+            colIdx++;
         }
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -370,6 +461,7 @@ public class LogViewPanel extends JPanel implements LogDataCollector {
         updateColumnSizeIfVisible(TableColumns.LINE, fm.stringWidth("0000"), fm.stringWidth("000000"));
         updateColumnSizeIfVisible(TableColumns.MARK, 16, 16);
         updateColumnSizeIfVisible(TableColumns.NOTE, 100, 1500);
+        updateColumnSizeIfVisible(TableColumns.MESSAGE, 5000, 1500);
     }
 
     private void updateTimeColumnSize() {

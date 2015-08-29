@@ -15,7 +15,12 @@
  */
 package pl.otros.logview.gui.actions.read;
 
+import java.util.logging.Logger;
+
+import javax.swing.JOptionPane;
+
 import org.apache.commons.vfs2.FileObject;
+
 import pl.otros.logview.gui.Icons;
 import pl.otros.logview.gui.LogViewPanelWrapper;
 import pl.otros.logview.gui.OtrosApplication;
@@ -24,9 +29,6 @@ import pl.otros.logview.importer.LogImporter;
 import pl.otros.logview.io.LoadingInfo;
 import pl.otros.logview.io.Utils;
 import pl.otros.logview.parser.TableColumnNameSelfDescribable;
-
-import javax.swing.*;
-import java.util.logging.Logger;
 
 public class LogFileInNewTabOpener {
 

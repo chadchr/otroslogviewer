@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,11 +36,19 @@ public enum TableColumns {
   LOGGER_NAME("Logger", 14), //
   LOG_SOURCE("Source", 15);//
 
-  private static HashMap<Integer, TableColumns> map = new HashMap<Integer, TableColumns>();
+  private static HashMap<Integer, TableColumns> mapIdToEnum = new HashMap<Integer, TableColumns>();
   static {
     TableColumns[] values = TableColumns.values();
     for (TableColumns tableColumns : values) {
-      map.put(tableColumns.getColumn(), tableColumns);
+      mapIdToEnum.put(tableColumns.getColumn(), tableColumns);
+    }
+  }
+
+  private static HashMap<String, TableColumns> mapNameToEnum = new HashMap<String, TableColumns>();
+  static {
+    TableColumns[] values = TableColumns.values();
+    for (TableColumns tableColumns : values) {
+        mapNameToEnum.put(tableColumns.getName(), tableColumns);
     }
   }
 
@@ -91,6 +99,10 @@ public enum TableColumns {
   }
 
   public static TableColumns getColumnById(int id) {
-    return map.get(id);
+      return mapIdToEnum.get(id);
+  }
+
+  public static TableColumns getColumnByName(String name) {
+      return mapNameToEnum.get(name);
   }
 }
