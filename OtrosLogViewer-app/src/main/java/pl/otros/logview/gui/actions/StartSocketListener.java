@@ -30,10 +30,9 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 
-import net.miginfocom.swing.MigLayout;
-
 import org.apache.commons.configuration.BaseConfiguration;
 
+import net.miginfocom.swing.MigLayout;
 import pl.otros.logview.BufferingLogDataCollectorProxy;
 import pl.otros.logview.gui.ConfKeys;
 import pl.otros.logview.gui.Icons;
@@ -121,15 +120,23 @@ public class StartSocketListener extends OtrosAction {
   }
 
   private LogImporterAndPort chooseLogImporter() {
+    String defaultImporterName = this.getOtrosApplication().getConfiguration().getString(ConfKeys.DEFAULTS_LOGIMPORTER, null);
+    int defaultImporterIdx = -1;
     Collection<LogImporter> elements = AllPluginables.getInstance().getLogImportersContainer().getElements();
     LogImporter[] importers = elements.toArray(new LogImporter[0]);
     String[] names = new String[elements.size()];
     for (int i = 0; i < names.length; i++) {
       names[i] = importers[i].getName();
+      if (names[i].equals(defaultImporterName)) {
+          defaultImporterIdx = i;
+      }
     }
 
     int socketPort = this.getOtrosApplication().getConfiguration().getInteger(ConfKeys.DEFAULTS_SOCKETPORT, 50505);
     JComboBox box = new JComboBox(names);
+    if (defaultImporterIdx != -1) {
+        box.setSelectedIndex(defaultImporterIdx);
+    }
     SpinnerNumberModel numberModel = new SpinnerNumberModel(socketPort, 1025, 65000, 1);
     JSpinner jSpinner = new JSpinner(numberModel);
     MigLayout migLayout = new MigLayout();
@@ -160,7 +167,9 @@ public class StartSocketListener extends OtrosAction {
 
     socketPort = numberModel.getNumber().intValue();
     this.getOtrosApplication().getConfiguration().setProperty(ConfKeys.DEFAULTS_SOCKETPORT, Integer.valueOf(socketPort));
-    return new LogImporterAndPort(importers[box.getSelectedIndex()], socketPort);
+    LogImporter selImporter =  importers[box.getSelectedIndex()];
+    this.getOtrosApplication().getConfiguration().setProperty(ConfKeys.DEFAULTS_LOGIMPORTER, selImporter.getName());
+    return new LogImporterAndPort(selImporter, socketPort);
   }
 
   public static class LogImporterAndPort {

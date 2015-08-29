@@ -54,5 +54,6 @@ public class ConfKeys {
   public static final String MESSAGE_DETAIL_SCROLL_HORIZONTAL = "gui.messageDetail.scrollHorizontal";
 
   public static final String DEFAULTS_SOCKETPORT = "defaults.socketPort";
+  public static final String DEFAULTS_LOGIMPORTER = "defaults.logImporter";
   public static final String DEFAULTS_USELAYOUT = "defaults.useLayout";
 }
