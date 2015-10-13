@@ -56,4 +56,6 @@ public class ConfKeys {
   public static final String DEFAULTS_SOCKETPORT = "defaults.socketPort";
   public static final String DEFAULTS_LOGIMPORTER = "defaults.logImporter";
   public static final String DEFAULTS_USELAYOUT = "defaults.useLayout";
+  public static final String DEFAULTS_COLORIZERS = "defaults.colorizers";
+  public static final String DEFAULTS_FORMATTERS = "defaults.formatters";
 }

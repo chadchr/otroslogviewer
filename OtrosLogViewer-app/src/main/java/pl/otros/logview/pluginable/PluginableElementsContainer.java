@@ -16,9 +16,11 @@
 package pl.otros.logview.pluginable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 public class PluginableElementsContainer<T extends PluginableElement> {
 
@@ -33,6 +35,16 @@ public class PluginableElementsContainer<T extends PluginableElement> {
   public Collection<T> getElements() {
     return new ArrayList<T>(elements.values());
   }
+  public String getAsSepString() {
+      StringBuilder sb = new StringBuilder();
+      for (final T plugin : elements.values()) {
+	  if (sb.length() > 0) {
+	      sb.append('+');
+	  }
+	  sb.append(plugin.getPluginableId());
+      }
+      return sb.toString();
+    }
 
   public T getElement(String pluginableId) {
     return elements.get(pluginableId);

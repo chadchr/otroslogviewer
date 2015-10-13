@@ -211,18 +211,62 @@ public class LogViewPanel extends JPanel implements LogDataCollector {
         markersContainer = allPluginable.getMarkersContainser();
         markersContainer.addListener(new MarkersMenuReloader());
         logFiltersContainer = allPluginable.getLogFiltersContainer();
+
         messageColorizersContainer = allPluginable.getMessageColorizers();
-        messageFormattersContainer = allPluginable.getMessageFormatters();
         selectedMessageColorizersContainer = new PluginableElementsContainer<MessageColorizer>();
-        selectedMessageFormattersContainer = new PluginableElementsContainer<MessageFormatter>();
+        String selectedColorizers = configuration.getString(ConfKeys.DEFAULTS_COLORIZERS, null);
         for (MessageColorizer messageColorizer : messageColorizersContainer.getElements()) {
-            selectedMessageColorizersContainer.addElement(messageColorizer);
-        }
-        for (MessageFormatter messageFormatter : messageFormattersContainer.getElements()) {
-            selectedMessageFormattersContainer.addElement(messageFormatter);
+            if (selectedColorizers == null || selectedColorizers.indexOf(messageColorizer.getPluginableId()) != -1) {
+                selectedMessageColorizersContainer.addElement(messageColorizer);
+            }
         }
         messageColorizersContainer.addListener(new SynchronizePluginableContainerListener<MessageColorizer>(selectedMessageColorizersContainer));
+        selectedMessageColorizersContainer.addListener(new PluginableElementEventListener<MessageColorizer>() {
+	    @Override
+	    public void elementAdded(MessageColorizer element) {
+		LogViewPanel.this.configuration.clearProperty(ConfKeys.DEFAULTS_COLORIZERS);
+		LogViewPanel.this.configuration.setProperty(ConfKeys.DEFAULTS_COLORIZERS, selectedMessageColorizersContainer.getAsSepString());
+	    }
+
+	    @Override
+	    public void elementRemoved(MessageColorizer element) {
+		LogViewPanel.this.configuration.clearProperty(ConfKeys.DEFAULTS_COLORIZERS);
+		LogViewPanel.this.configuration.setProperty(ConfKeys.DEFAULTS_COLORIZERS, selectedMessageColorizersContainer.getAsSepString());
+	    }
+
+	    @Override
+	    public void elementChanged(MessageColorizer element) {
+		LogViewPanel.this.configuration.clearProperty(ConfKeys.DEFAULTS_COLORIZERS);
+		LogViewPanel.this.configuration.setProperty(ConfKeys.DEFAULTS_COLORIZERS, selectedMessageColorizersContainer.getAsSepString());
+	    }
+	});
+
+        messageFormattersContainer = allPluginable.getMessageFormatters();
+        selectedMessageFormattersContainer = new PluginableElementsContainer<MessageFormatter>();
+        String selectedFormatters = configuration.getString(ConfKeys.DEFAULTS_FORMATTERS, null);
+        for (MessageFormatter messageFormatter : messageFormattersContainer.getElements()) {
+            if (selectedFormatters == null || selectedFormatters.indexOf(messageFormatter.getPluginableId()) != -1) {
+        	selectedMessageFormattersContainer.addElement(messageFormatter);
+            }
+        }
         messageFormattersContainer.addListener(new SynchronizePluginableContainerListener<MessageFormatter>(selectedMessageFormattersContainer));
+        selectedMessageFormattersContainer.addListener(new PluginableElementEventListener<MessageFormatter>() {
+	    @Override
+	    public void elementAdded(MessageFormatter element) {
+		LogViewPanel.this.configuration.clearProperty(ConfKeys.DEFAULTS_FORMATTERS);
+		LogViewPanel.this.configuration.setProperty(ConfKeys.DEFAULTS_FORMATTERS, selectedMessageFormattersContainer.getAsSepString());
+	    }
+
+	    @Override
+	    public void elementRemoved(MessageFormatter element) {
+		LogViewPanel.this.configuration.clearProperty(ConfKeys.DEFAULTS_FORMATTERS);
+		LogViewPanel.this.configuration.setProperty(ConfKeys.DEFAULTS_FORMATTERS, selectedMessageFormattersContainer.getAsSepString());
+	    }
+
+	    @Override
+	    public void elementChanged(MessageFormatter element) {
+	    }
+	});
 
 
         menuLabelFont = new JLabel().getFont().deriveFont(Font.BOLD);
