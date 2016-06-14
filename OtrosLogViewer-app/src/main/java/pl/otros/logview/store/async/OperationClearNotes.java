@@ -1,9 +1,9 @@
 package pl.otros.logview.store.async;
 
-import pl.otros.logview.store.LogDataStore;
+import pl.otros.logview.api.model.LogDataStore;
 
 class OperationClearNotes implements Runnable {
-  private LogDataStore logDataStore;
+  private final LogDataStore logDataStore;
 
   public OperationClearNotes(LogDataStore logDataStore) {
     this.logDataStore = logDataStore;
@@ -11,6 +11,6 @@ class OperationClearNotes implements Runnable {
 
   @Override
   public void run() {
-     logDataStore.clearNotes();
+    logDataStore.clearNotes();
   }
 }

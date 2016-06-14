@@ -18,20 +18,22 @@ package pl.otros.logview.gui.actions;
 
 import org.apache.commons.lang.StringUtils;
 import org.jdesktop.swingx.JXTable;
-import pl.otros.logview.LogData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.gui.LogDataTableModel;
+import pl.otros.logview.api.model.LogData;
 import pl.otros.logview.filter.CallHierarchyLogFilter;
-import pl.otros.logview.gui.LogDataTableModel;
-import pl.otros.logview.gui.OtrosApplication;
 import pl.otros.logview.uml.Message;
 import pl.otros.logview.uml.Message.MessageType;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.util.*;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ShowCallHierarchyAction extends FocusOnThisAbstractAction<CallHierarchyLogFilter> {
-  private static final Logger LOGGER = Logger.getLogger(ShowCallHierarchyAction.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(ShowCallHierarchyAction.class.getName());
 
   public ShowCallHierarchyAction(CallHierarchyLogFilter filter, JCheckBox filterEnableCheckBox, OtrosApplication otrosApplication) {
     super(filter, filterEnableCheckBox, otrosApplication);
@@ -44,15 +46,15 @@ public class ShowCallHierarchyAction extends FocusOnThisAbstractAction<CallHiera
     JXTable jTable = getOtrosApplication().getSelectPaneJXTable();
     int selected = jTable.getSelectedRow();
     selected = jTable.convertRowIndexToModel(selected);
-    ArrayList<Integer> listOfEvents2 = new ArrayList<Integer>();
-    HashSet<Integer> listEntryEvents = new HashSet<Integer>();
+    ArrayList<Integer> listOfEvents2 = new ArrayList<>();
+    HashSet<Integer> listEntryEvents = new HashSet<>();
 
     LogDataTableModel dataTableModel = getOtrosApplication().getSelectedPaneLogDataTableModel();
     try {
       findCallHierarchyEvents(selected, dataTableModel, listEntryEvents, listOfEvents2);
-    } catch (java.util.NoSuchElementException e1) {
-      LOGGER.severe("Log file do not have consistent Entry/Return in logs");
-      throw new Exception("Log file do not have consistent Entry/Return in logs",e1);
+    } catch (NoSuchElementException e1) {
+      LOGGER.error("Log file do not have consistent Entry/Return in logs");
+      throw new Exception("Log file do not have consistent Entry/Return in logs", e1);
     }
     filter.setListId(listEntryEvents, listOfEvents2);
     filterEnableCheckBox.setSelected(true);
@@ -62,8 +64,8 @@ public class ShowCallHierarchyAction extends FocusOnThisAbstractAction<CallHiera
   protected void findCallHierarchyEvents(int selected, LogDataTableModel model, Collection<Integer> listEntryEvents, Collection<Integer> listOfEvents2) {
     LogData ld = model.getLogData(selected);
     String thread = ld.getThread();
-    LinkedList<LogData> stack = new LinkedList<LogData>();
-    HashMap<Integer, ArrayList<Integer>> allEventsInCallHierarchyMap = new HashMap<Integer, ArrayList<Integer>>();
+    LinkedList<LogData> stack = new LinkedList<>();
+    HashMap<Integer, ArrayList<Integer>> allEventsInCallHierarchyMap = new HashMap<>();
 
     int rowCount = model.getRowCount();
     for (int i = 0; i < rowCount; i++) {
@@ -74,7 +76,7 @@ public class ShowCallHierarchyAction extends FocusOnThisAbstractAction<CallHiera
       Message m = new Message(logData.getMessage());
       Integer stackSize = stack.size();
       if (!allEventsInCallHierarchyMap.containsKey(stackSize)) {
-        allEventsInCallHierarchyMap.put(stackSize, new ArrayList<Integer>());
+        allEventsInCallHierarchyMap.put(stackSize, new ArrayList<>());
       }
       ArrayList<Integer> tempListOfEvents = allEventsInCallHierarchyMap.get(stackSize);
       if (m.getType().equals(MessageType.TYPE_ENTRY)) {
@@ -90,13 +92,9 @@ public class ShowCallHierarchyAction extends FocusOnThisAbstractAction<CallHiera
       }
     }
 
-    for (ArrayList<Integer> list : allEventsInCallHierarchyMap.values()) {
-      listOfEvents2.addAll(list);
-    }
+    allEventsInCallHierarchyMap.values().forEach(listOfEvents2::addAll);
 
-    for (LogData aStack : stack) {
-      listEntryEvents.add(Integer.valueOf(aStack.getId()));
-    }
+    listEntryEvents.addAll(stack.stream().map(LogData::getId).collect(Collectors.toList()));
   }
 
   protected boolean theSameLogMethod(LogData ld1, LogData ld2) {

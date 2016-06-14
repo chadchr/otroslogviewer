@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,11 +16,11 @@
 
 package pl.otros.logview.accept.query;
 
-import pl.otros.logview.LogData;
-import pl.otros.logview.accept.AcceptCondition;
 import pl.otros.logview.accept.query.org.apache.log4j.rule.ExpressionRule;
 import pl.otros.logview.accept.query.org.apache.log4j.rule.Rule;
 import pl.otros.logview.accept.query.org.apache.log4j.rule.RuleException;
+import pl.otros.logview.api.AcceptCondition;
+import pl.otros.logview.api.model.LogData;
 
 import java.util.HashMap;
 
@@ -28,8 +28,8 @@ public class QueryAcceptCondition implements AcceptCondition {
 
   private static final String DESCRIPTION = "Query - desc";
   private static final String NAME = "Query";
-  private String query;
-  private Rule rule;
+  private final String query;
+  private final Rule rule;
 
   public QueryAcceptCondition(String query) throws RuleException {
     super();
@@ -43,7 +43,7 @@ public class QueryAcceptCondition implements AcceptCondition {
 
   @Override
   public boolean accept(LogData data) {
-    HashMap<Object, Object> matches = new HashMap<Object, Object>();
+    HashMap<Object, Object> matches = new HashMap<>();
     boolean evaluate = rule.evaluate(data, matches);
     return evaluate;
   }

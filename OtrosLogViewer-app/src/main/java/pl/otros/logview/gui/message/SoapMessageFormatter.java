@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 package pl.otros.logview.gui.message;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.pluginable.MessageFormatter;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
@@ -23,12 +27,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.logging.Logger;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +36,7 @@ public class SoapMessageFormatter implements MessageFormatter {
   public static final String REMOVE_NIL_PATTERN = "(<\\w+)( [^>]*?xsi:nil=\"true\".*?)(/>)";
   public static final String REMOVE_NIL_REPLACE_PATTERN = "$1$3";
   public static final String XML_VERSION_1_0_ENCODING_UTF_8 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-  private static final Logger LOGGER = Logger.getLogger(SoapMessageFormatter.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(SoapMessageFormatter.class.getName());
   private static final String NAME = "Soap formatter";
   private static final String DESCRIPTION = "Formatting SOAP messages.";
   private static final Pattern PATTERN_MULTIREF_DEFINITION = Pattern.compile("<(\\w+) href=\"#(id\\d+)\".*?/>", Pattern.DOTALL);
@@ -47,8 +46,7 @@ public class SoapMessageFormatter implements MessageFormatter {
   private static final int PATTERN_MULTIREF_VALUES_GROUP_ID = 1;
   private static final int PATTERN_MULTIREF_VALUES_GROUP_SCHEMA_DEF = 2;
   private static final int PATTERN_MULTIREF_VALUES_GROUP_VALUE = 3;
-  private int formantIndent = 2;
-  private SoapFinder soapFinder = new SoapFinder();
+  private final SoapFinder soapFinder = new SoapFinder();
   private boolean removeMultiRefs = false;
   private boolean removeXsiForNilElements;
 
@@ -56,7 +54,7 @@ public class SoapMessageFormatter implements MessageFormatter {
   /*
        * (non-Javadoc)
        *
-       * @see pl.otros.logview.gui.message.MessageFormatter#formattingNeeded(java.lang.String)
+       * @see pl.otros.logview.api.MessageFormatter#formattingNeeded(java.lang.String)
        */
   @Override
   public boolean formattingNeeded(String message) {
@@ -66,7 +64,7 @@ public class SoapMessageFormatter implements MessageFormatter {
   /*
      * (non-Javadoc)
      *
-     * @see pl.otros.logview.gui.message.MessageFormatter#format(java.lang.String, javax.swing.text.StyledDocument)
+     * @see pl.otros.logview.api.MessageFormatter#format(java.lang.String, javax.swing.text.StyledDocument)
      */
   @Override
   public String format(String message) {
@@ -83,7 +81,7 @@ public class SoapMessageFormatter implements MessageFormatter {
         try {
           soapMessage = removeMultiRefs(soapMessage);
         } catch (Exception e) {
-          LOGGER.severe("Error occurred when removing multirefs: " + e.getMessage());
+          LOGGER.error("Error occurred when removing multirefs: " + e.getMessage());
         }
       }
       if (removeXsiForNilElements) {
@@ -93,7 +91,7 @@ public class SoapMessageFormatter implements MessageFormatter {
       try {
         soapMessage = prettyFormat(soapMessage);
       } catch (Exception e) {
-        LOGGER.severe("Error occurred when formatting soap message: " + e.getMessage());
+        LOGGER.error("Error occurred when formatting soap message: " + e.getMessage());
       }
 
       sb.append(soapMessage);
@@ -131,7 +129,7 @@ public class SoapMessageFormatter implements MessageFormatter {
     Pattern p = Pattern.compile(REMOVE_NIL_PATTERN);
     Matcher matcher = p.matcher(xml);
     if (matcher.find()) {
-      xml = matcher.replaceAll(REMOVE_NIL_REPLACE_PATTERN);
+      return matcher.replaceAll(REMOVE_NIL_REPLACE_PATTERN);
     }
     return xml;
   }
@@ -144,7 +142,7 @@ public class SoapMessageFormatter implements MessageFormatter {
     HashMap<String, SubText> multiRefTagSchemas = extractMultiRef(message, PATTERN_MULTIREF_VALUES, PATTERN_MULTIREF_VALUES_GROUP_ID, PATTERN_MULTIREF_VALUES_GROUP_SCHEMA_DEF);
     StringBuilder sb = new StringBuilder(message);
     Set<String> stringSet = multiRefDefinition.keySet();
-    ArrayList<String> sortedKeys = new ArrayList<String>(stringSet);
+    ArrayList<String> sortedKeys = new ArrayList<>(stringSet);
     Collections.sort(sortedKeys);
     for (String id : sortedKeys) {
       //replace reference with value
@@ -176,7 +174,7 @@ public class SoapMessageFormatter implements MessageFormatter {
   }
 
   protected HashMap<String, SubText> extractMultiRef(String message, Pattern pattern, int idGroup, int valueGroup) {
-    HashMap<String, SubText> multiRefs = new HashMap<String, SubText>();
+    HashMap<String, SubText> multiRefs = new HashMap<>();
     Matcher matcher2 = pattern.matcher(message);
     while (matcher2.find()) {
       String id = matcher2.group(idGroup);
@@ -188,6 +186,7 @@ public class SoapMessageFormatter implements MessageFormatter {
   }
 
   public String prettyFormat(String input) {
+    int formantIndent = 2;
     return prettyFormat(input, formantIndent, false);
   }
 

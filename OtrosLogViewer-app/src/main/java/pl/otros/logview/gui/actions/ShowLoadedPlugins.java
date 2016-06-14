@@ -15,15 +15,10 @@
  */
 package pl.otros.logview.gui.actions;
 
-import pl.otros.logview.filter.LogFilter;
-import pl.otros.logview.gui.Icons;
-import pl.otros.logview.gui.OtrosApplication;
-import pl.otros.logview.gui.markers.AutomaticMarker;
-import pl.otros.logview.gui.message.MessageColorizer;
-import pl.otros.logview.gui.message.MessageFormatter;
-import pl.otros.logview.pluginable.AllPluginables;
-import pl.otros.logview.pluginable.PluginableElement;
-import pl.otros.logview.pluginable.PluginableElementsContainer;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.gui.Icons;
+import pl.otros.logview.api.gui.OtrosAction;
+import pl.otros.logview.api.pluginable.*;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -31,8 +26,8 @@ import java.awt.event.ActionEvent;
 public class ShowLoadedPlugins extends OtrosAction {
 
 
-  private JComponent loadedComponents;
-  private JTextArea textArea;
+  private final JComponent loadedComponents;
+  private final JTextArea textArea;
 
   public ShowLoadedPlugins(OtrosApplication otrosApplication) {
     super(otrosApplication);
@@ -49,7 +44,7 @@ public class ShowLoadedPlugins extends OtrosAction {
   @Override
   public void actionPerformed(ActionEvent arg0) {
     refreshData();
-    getOtrosApplication().addClosableTab("Loaded plugins","List loaded plugins",Icons.PLUGIN,loadedComponents,true);
+    getOtrosApplication().addClosableTab("Loaded plugins", "List loaded plugins", Icons.PLUGIN, loadedComponents, true);
 
   }
 

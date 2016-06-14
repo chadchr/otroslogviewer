@@ -18,16 +18,16 @@ package pl.otros.logview.gui.actions.search;
 import static org.testng.AssertJUnit.assertEquals;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
-import pl.otros.logview.LogData;
+import pl.otros.logview.api.model.LogData;
 
 public class StringContainsSearchMatcherTest {
 
   private LogData logData;
   private LogData logDataUpperCase;
-  private StringContainsSearchMatcher matcher = new StringContainsSearchMatcher("ala");
+  private final StringContainsSearchMatcher matcher = new StringContainsSearchMatcher("ala");
 
   @BeforeMethod
-public void setup() {
+public void setUp() {
     logData = new LogData();
     logData.setMessage("ala ma kota");
 

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,11 +15,12 @@
  ******************************************************************************/
 package pl.otros.logview.gui.markers.editor;
 
-import pl.otros.logview.gui.markers.AutomaticMarker;
+import org.apache.commons.io.IOUtils;
+import pl.otros.logview.api.pluginable.AllPluginables;
+import pl.otros.logview.api.pluginable.AutomaticMarker;
+import pl.otros.logview.api.pluginable.PluginableElementsContainer;
 import pl.otros.logview.gui.markers.PropertyFileAbstractMarker;
 import pl.otros.logview.loader.AutomaticMarkerLoader;
-import pl.otros.logview.pluginable.AllPluginables;
-import pl.otros.logview.pluginable.PluginableElementsContainer;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -34,8 +35,8 @@ import java.util.Properties;
 
 public class NewMarkerAction extends AbstractAction {
 
-  private JFileChooser chooser;
-  private File markersFolder = AllPluginables.USER_MARKERS;
+  private final JFileChooser chooser;
+  private final File markersFolder = AllPluginables.USER_MARKERS;
 
   public NewMarkerAction() {
     super();
@@ -71,7 +72,7 @@ public class NewMarkerAction extends AbstractAction {
     JButton save = new JButton("Save");
     save.addActionListener(new ActionListener() {
 
-      private PluginableElementsContainer<AutomaticMarker> markersContainser = AllPluginables.getInstance().getMarkersContainser();;
+      private final PluginableElementsContainer<AutomaticMarker> markersContainser = AllPluginables.getInstance().getMarkersContainser();
 
       @Override
       public void actionPerformed(ActionEvent arg0) {
@@ -106,14 +107,19 @@ public class NewMarkerAction extends AbstractAction {
     f.setVisible(true);
   }
 
-  private void saveMarker(File f, Properties p) throws IOException {
-    if (!f.getName().endsWith(".marker")) {
-      f = new File(f.getAbsoluteFile() + ".marker");
+  private void saveMarker(final File markerFile, final Properties markerProperties) throws IOException {
+    File file;
+    if (!markerFile.getName().endsWith(".marker")) {
+      file = new File(markerFile.getAbsoluteFile() + ".marker");
+    } else {
+      file = markerFile;
     }
-    FileOutputStream fout = new FileOutputStream(f);
-    p.setProperty(PropertyFileAbstractMarker.FILE, f.getName());
-    p.store(fout, "Edited at " + new Date().toString());
-    fout.close();
+    try (FileOutputStream fout = new FileOutputStream(file)) {
+      markerProperties.setProperty(PropertyFileAbstractMarker.FILE, file.getName());
+      markerProperties.store(fout, "Edited at " + new Date().toString());
+    } catch (IOException e) {
+      throw e;
+    }
   }
 
 }

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +16,8 @@
 package pl.otros.logview.gui.renderers;
 
 import org.apache.commons.lang.StringUtils;
-import pl.otros.logview.Note;
-import pl.otros.logview.gui.Icons;
+import pl.otros.logview.api.gui.Icons;
+import pl.otros.logview.api.model.Note;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -25,9 +25,9 @@ import java.awt.*;
 
 public class NoteRenderer extends DefaultTableCellRenderer {
 
-  private ImageIcon iconEmpty;
-  private ImageIcon iconExist;
-  private JLabel label;
+  private final ImageIcon iconEmpty;
+  private final ImageIcon iconExist;
+  private final JLabel label;
 
   public NoteRenderer() {
     label = new JLabel();
@@ -42,7 +42,7 @@ public class NoteRenderer extends DefaultTableCellRenderer {
     // super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
     if (value instanceof Note) {
       Note note = (Note) value;
-      if (note == null || StringUtils.isBlank(note.getNote())) {
+      if (StringUtils.isBlank(note.getNote())) {
         label.setIcon(iconEmpty);
         label.setText("");
       } else {

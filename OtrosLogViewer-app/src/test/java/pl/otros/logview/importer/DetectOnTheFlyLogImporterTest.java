@@ -18,12 +18,15 @@ package pl.otros.logview.importer;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
-import pl.otros.logview.LogDataCollector;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.model.LogDataCollector;
+import pl.otros.logview.api.importer.LogImporterUsingParser;
+import pl.otros.logview.api.importer.LogImporter;
 import pl.otros.logview.importer.log4jxml.Log4jXmlLogImporter;
-import pl.otros.logview.parser.JulSimpleFormmaterParser;
-import pl.otros.logview.parser.ParsingContext;
+import pl.otros.logview.parser.JulSimpleFormatterParser;
+import pl.otros.logview.api.parser.ParsingContext;
 import pl.otros.logview.parser.log4j.Log4jPatternMultilineLogParser;
-import pl.otros.logview.reader.ProxyLogDataCollector;
+import pl.otros.logview.api.reader.ProxyLogDataCollector;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,8 +41,8 @@ public class DetectOnTheFlyLogImporterTest {
 
   @BeforeMethod
 public void initialize() throws InitializationException, IOException {
-    logImporters = new ArrayList<LogImporter>();
-    logImporters.add(new LogImporterUsingParser(new JulSimpleFormmaterParser()));
+    logImporters = new ArrayList<>();
+    logImporters.add(new LogImporterUsingParser(new JulSimpleFormatterParser()));
     logImporters.add(new UtilLoggingXmlLogImporter());
     logImporters.add(new Log4jSerilizedLogImporter());
     logImporters.add(new Log4jXmlLogImporter());

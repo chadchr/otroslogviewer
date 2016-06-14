@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,25 +18,26 @@ package pl.otros.logview.parser.log4j;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.spi.LoggingEvent;
-import pl.otros.logview.LogData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.RenamedLevel;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.model.LogData;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import pl.otros.logview.RenamedLevel;
-import pl.otros.logview.importer.InitializationException;
 
 public class Log4jUtil {
 
-  private static final Logger LOGGER = Logger.getLogger(Log4jUtil.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(Log4jUtil.class.getName());
   private static final Map<String, String> IMMUTABLE_EMPTY_MAP = new ImmutableMap.Builder<String, String>().build();
   public static final String CONVERSION_PATTERN = "conversionPattern";
-  
+
   public static LogData translateLog4j(LoggingEvent event) {
     LogData ld = new LogData();
     ld.setDate(new Date(event.getTimeStamp()));
@@ -63,7 +64,7 @@ public class Log4jUtil {
     ld.setProperties(IMMUTABLE_EMPTY_MAP);
     Map properties = event.getProperties();
     if (properties != null) {
-      Map<String, String> props = new HashMap<String, String>(properties.size());
+      Map<String, String> props = new HashMap<>(properties.size());
       for (Object key : properties.keySet()) {
         String value = (String) properties.get(key);
         if (StringUtils.isNotBlank(value)) {
@@ -92,7 +93,7 @@ public class Log4jUtil {
     } else if (s.equalsIgnoreCase("TRACE")) {
       return RenamedLevel.TRACE;
     }
-    LOGGER.severe("Level \"" + s + "\" not parsed!");
+    LOGGER.error("Level \"" + s + "\" not parsed!");
     return null;
   }
 
@@ -115,7 +116,7 @@ public class Log4jUtil {
 
     String parserPattern = p.getProperty(CONVERSION_PATTERN, "");
 
-    Map<Character, String> conversionCharacters = new HashMap<Character, String>();
+    Map<Character, String> conversionCharacters = new HashMap<>();
     conversionCharacters.put('C', "CLASS");
     conversionCharacters.put('c', "CLASS");
     conversionCharacters.put('d', "TIMESTAMP");

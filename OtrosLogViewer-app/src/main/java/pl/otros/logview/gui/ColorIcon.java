@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,11 +20,11 @@ import java.awt.*;
 
 public class ColorIcon implements Icon {
 
-  private Color background;
-  private Color foreground;
-  private int width;
-  private int height;
-  private char[] chars = new char[] { 'A', 'b' };
+  private final Color background;
+  private final Color foreground;
+  private final int width;
+  private final int height;
+  private final char[] chars = {'A', 'b'};
 
   public ColorIcon(Color background, Color foreground) {
     this(background, foreground, 16, 16);

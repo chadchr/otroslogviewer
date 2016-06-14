@@ -2,11 +2,11 @@ package pl.otros.logview.store.async;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import pl.otros.logview.LogData;
-import pl.otros.logview.MarkerColors;
-import pl.otros.logview.Note;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.LogDataStore;
+import pl.otros.logview.api.model.MarkerColors;
+import pl.otros.logview.api.model.Note;
 import pl.otros.logview.gui.actions.search.SearchResult;
-import pl.otros.logview.store.LogDataStore;
 
 import java.util.Iterator;
 import java.util.TreeMap;
@@ -15,8 +15,8 @@ import java.util.concurrent.ExecutionException;
 
 public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
 
-  private LogDataStore logDataStore;
-  private ListeningExecutorService service;
+  private final LogDataStore logDataStore;
+  private final ListeningExecutorService service;
 
   public MemoryAsyncLogDataStore(ListeningExecutorService service, LogDataStore logDataStore) {
     this.service = service;
@@ -29,9 +29,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
   public int getCount() {
     try {
       return service.submit(new OperationGetCount(logDataStore)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return 0;
@@ -62,16 +60,14 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
 
   @Override
   public Integer getLogDataIdInRow(int row) {
-    return runCallableInDedicatedThread(new OperationGetDataIdInRow(logDataStore,row));
+    return runCallableInDedicatedThread(new OperationGetDataIdInRow(logDataStore, row));
   }
 
   @Override
   public int getLimit() {
     try {
       return service.submit(new OperationGetLimit(logDataStore)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return 0;
@@ -84,13 +80,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
 
   @Override
   public void add(final LogData... logDatas) {
-    service.submit(new Runnable() {
-      @Override
-      public void run() {
-        logDataStore.add(logDatas);
-
-      }
-    });
+    service.submit(() -> logDataStore.add(logDatas));
   }
 
   @Override
@@ -103,9 +93,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
   public int clear() {
     try {
       return service.submit(new OperationClear(logDataStore)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return 0;
@@ -113,7 +101,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
 
   @Override
   public void addNoteToRow(int row, Note note) {
-    runCallableInDedicatedThread(new OpeartionAddNoteToRow(logDataStore,row,note));
+    runCallableInDedicatedThread(new OpeartionAddNoteToRow(logDataStore, row, note));
   }
 
   @Override
@@ -131,9 +119,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
   public void clearNotes() {
     try {
       service.submit(new OperationClearNotes(logDataStore)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
 
@@ -149,9 +135,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
     try {
       T t = service.submit(task).get();
       return t;
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return null;
@@ -161,9 +145,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
   public Iterator<LogData> iterator() {
     try {
       return service.submit(new OperationGetIterator(logDataStore)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return null;
@@ -174,9 +156,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
     //TODO filter support
     try {
       return service.submit(new OperationIsMarked(logDataStore, row)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return false;
@@ -187,9 +167,7 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
     //TODO filter support
     try {
       return service.submit(new OperationGetMarkerColors(logDataStore, row)).get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     return null;
@@ -197,12 +175,12 @@ public class MemoryAsyncLogDataStore implements AsyncLogDataStore {
 
   @Override
   public void markRows(MarkerColors markerColors, int... rows) {
-    runCallableInDedicatedThread(new OperationMarkRows(logDataStore,markerColors,rows));
+    runCallableInDedicatedThread(new OperationMarkRows(logDataStore, markerColors, rows));
   }
 
   @Override
   public void unmarkRows(int... rows) {
-    runCallableInDedicatedThread(new OperationUnMarkRows(logDataStore,rows));
+    runCallableInDedicatedThread(new OperationUnMarkRows(logDataStore, rows));
 
   }
 

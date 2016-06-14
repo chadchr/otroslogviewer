@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,16 +21,16 @@ public class StringShape {
 
   private String string;
   private Font font;
-  private int centerX;
-  private int centerY;
-  private Color color;
+  private final int centerX;
+  private final int centerY;
+  private final Color color;
 
-  public StringShape(String string, Font font, int centerX, int centerY, Color color) {
+  public StringShape(String text, Font font, int centerX, int centerY, Color color) {
     super();
-    if (string.length() == 0) {
-      string = " ";
+    if (text.length() == 0) {
+      text = " ";
     }
-    this.string = string;
+    this.string = text;
     this.font = font;
     this.centerX = centerX;
     this.centerY = centerY;

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,11 +15,13 @@
  ******************************************************************************/
 package pl.otros.logview.parser.log4j;
 
-import pl.otros.logview.LogData;
-import pl.otros.logview.importer.InitializationException;
-import pl.otros.logview.parser.MultiLineLogParser;
-import pl.otros.logview.parser.ParserDescription;
-import pl.otros.logview.parser.ParsingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.parser.MultiLineLogParser;
+import pl.otros.logview.api.parser.ParserDescription;
+import pl.otros.logview.api.parser.ParsingContext;
 
 import java.awt.event.KeyEvent;
 import java.text.DateFormat;
@@ -29,18 +31,17 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Log4jPatternIsoDate5pTMNLogParser implements MultiLineLogParser {
 
-  private static final Logger LOGGER = Logger.getLogger(Log4jPatternIsoDate5pTMNLogParser.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(Log4jPatternIsoDate5pTMNLogParser.class.getName());
 
-  private ParserDescription pd;
+  private final ParserDescription pd;
 
   // private SimpleDateFormat datePattern = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS", Locale.ENGLISH);
 
   public Log4jPatternIsoDate5pTMNLogParser() {
-    LOGGER.fine("Initializing");
+    LOGGER.debug("Initializing");
     pd = new ParserDescription();
     pd.setDisplayName("Log4j: \"%d{ISO8601} %-5p [%t] %m%n\"");
     pd.setDescription("Parse logs formmated by log4j pattern \"%d{ISO8601} %-5p [%t] %m%n\"");
@@ -50,18 +51,18 @@ public class Log4jPatternIsoDate5pTMNLogParser implements MultiLineLogParser {
 
   @Override
   public LogData parse(String event, ParsingContext context) throws ParseException {
-    LOGGER.finest("Parsing event: \"" + event + "\n");
+    LOGGER.trace("Parsing event: \"" + event + "\n");
     if (event == null || event.length() == 0) {
-      LOGGER.finest("Event null or 0 size, returning null");
+      LOGGER.trace("Event null or 0 size, returning null");
       return null;
     }
     StringBuilder sb = context.getUnmatchedLog();
 
     try {
       boolean dateFound = tryToFindDate(event, context.getDateFormat());
-      LOGGER.finest("Trying to find date in event: " + dateFound);
+      LOGGER.trace("Trying to find date in event: " + dateFound);
       if (!dateFound) {
-        LOGGER.finest("date not fount, return null");
+        LOGGER.trace("date not fount, return null");
         return null;
       }
       return tryToParseStringBuilder(sb, context.getDateFormat());
@@ -86,28 +87,28 @@ public class Log4jPatternIsoDate5pTMNLogParser implements MultiLineLogParser {
     try {
       datePattern.parse(s);
       return true;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
     }
     return false;
   }
 
   private LogData tryToParseStringBuilder(StringBuilder sb, DateFormat datePattern) {
-    LOGGER.finest("Trying to parse: " + sb.toString());
+    LOGGER.trace("Trying to parse: " + sb.toString());
     if (sb.length() < 27) {
-      LOGGER.finest("Length<27, return null");
+      LOGGER.trace("Length<27, return null");
       return null;
     }
     String dateString = sb.substring(0, 23);
     Date date = null;
     try {
-      LOGGER.finest("Parsing date: \"" + dateString + "\"");
+      LOGGER.trace("Parsing date: \"" + dateString + "\"");
       date = datePattern.parse(dateString);
     } catch (Exception e) {
-      LOGGER.warning("Date in \"" + dateString + "\" not parsed, return null, " + e.getMessage());
+      LOGGER.warn("Date in \"" + dateString + "\" not parsed, return null, " + e.getMessage());
       return null;
     }
     if (date == null) {
-      LOGGER.severe("Date parsed is null!");
+      LOGGER.error("Date parsed is null!");
       System.err.println("Date \"" + dateString + "\" not parsed!");
       return null;
     }

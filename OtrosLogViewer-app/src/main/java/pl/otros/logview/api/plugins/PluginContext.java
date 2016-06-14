@@ -17,7 +17,7 @@
 package pl.otros.logview.api.plugins;
 
 import com.google.common.annotations.Beta;
-import pl.otros.logview.gui.OtrosApplication;
+import pl.otros.logview.api.OtrosApplication;
 
 import javax.swing.*;
 
@@ -26,16 +26,17 @@ import javax.swing.*;
 @Beta
 public interface PluginContext {
 
-  public OtrosApplication getOtrosApplication();
+  OtrosApplication getOtrosApplication();
 
-  public void addClosableTab(String name, String tooltip, Icon icon, JComponent component, boolean show);
+  void addClosableTab(String name, String tooltip, Icon icon, JComponent component, boolean show);
 
-  public LogOpenHandler getLogOpenHandler();
+  LogOpenHandler getLogOpenHandler();
 
   /**
    * Adds MenuActionProvider. Before displaying log table context menu, actions from providers will be collected and
    * displayed in menu.
+   *
    * @param menuActionProvider
    */
-  public void addLogViewPanelMenuActionProvider(MenuActionProvider menuActionProvider);
+  void addLogViewPanelMenuActionProvider(MenuActionProvider menuActionProvider);
 }

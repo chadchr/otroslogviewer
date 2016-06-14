@@ -2,18 +2,16 @@ package pl.otros.logview.ide;
 
 import org.apache.commons.configuration.DataConfiguration;
 import org.apache.commons.lang.StringUtils;
-import pl.otros.logview.gui.ConfKeys;
-import pl.otros.logview.gui.OtrosApplication;
-import pl.otros.logview.gui.actions.OtrosAction;
+import pl.otros.logview.api.ConfKeys;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.gui.OtrosAction;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.logging.Logger;
 
 /**
  */
 public class IdeIntegrationConfigAction extends OtrosAction {
-  private static final Logger LOGGER = Logger.getLogger(IdeIntegrationConfigAction.class.getName());
 
   public IdeIntegrationConfigAction(OtrosApplication otrosApplication) {
     super(otrosApplication);

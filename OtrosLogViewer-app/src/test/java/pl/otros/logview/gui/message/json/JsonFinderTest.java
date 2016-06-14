@@ -14,7 +14,7 @@ import java.util.List;
 public class JsonFinderTest {
 
 
-    private JsonFinder underTest = new JsonFinder();
+    private final JsonFinder underTest = new JsonFinder();
 
 
     @DataProvider(name = "testFindJsonFragments")
@@ -52,7 +52,7 @@ public class JsonFinderTest {
     @Test(dataProvider = "testGetSubTexts")
     public void testGetSubTexts(String openParenthesisString, List<SubText> expected) throws Exception {
         //given
-        List<Integer> openParenthesis = new ArrayList<Integer>();
+        List<Integer> openParenthesis = new ArrayList<>();
         for (int i = 0; i < openParenthesisString.length(); i++) {
             openParenthesis.add(Integer.parseInt(openParenthesisString.substring(i,i+1)));
         }
@@ -81,13 +81,12 @@ public class JsonFinderTest {
     @Test(dataProvider = "testCountParenthesis")
     public void testCountParenthesis(String string, String result) throws Exception {
         //given
-        result = result.replace(" ", "");
 
         //when
         final List<Integer> actual = underTest.countParenthesis(string);
 
         //then
         final String actualString = Joiner.on("").join(actual);
-        Assert.assertEquals(actualString, result,string);
+        Assert.assertEquals(actualString, result.replace(" ", ""),string);
     }
 }

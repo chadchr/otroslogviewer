@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,17 +20,18 @@ import org.jdesktop.swingx.JXTipOfTheDay;
 import org.jdesktop.swingx.JXTipOfTheDay.ShowOnStartupChoice;
 import org.jdesktop.swingx.tips.TipLoader;
 import org.jdesktop.swingx.tips.TipOfTheDayModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 public class TipOfTheDay {
 
   private static final String GUI_SHOW_TIP_OF_THE_DAY = "gui.showTipOfTheDay";
-  private static final Logger LOGGER = Logger.getLogger(TipOfTheDay.class.getName());
-  private DataConfiguration dataConfiguration;
+  private static final Logger LOGGER = LoggerFactory.getLogger(TipOfTheDay.class.getName());
+  private final DataConfiguration dataConfiguration;
 
   public TipOfTheDay(DataConfiguration dataConfiguration) {
     super();
@@ -56,7 +57,7 @@ public class TipOfTheDay {
         }
       });
     } catch (IOException e) {
-      LOGGER.warning("Can't load tip of the day: " + e.getMessage());
+      LOGGER.warn("Can't load tip of the day: " + e.getMessage());
     }
   }
 

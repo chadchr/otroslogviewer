@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,17 +16,17 @@
 package pl.otros.logview.filter;
 
 import net.miginfocom.swing.MigLayout;
+import pl.otros.logview.api.pluginable.LogFilter;
+import pl.otros.logview.api.pluginable.LogFilterValueChangeListener;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 
 public class FilterPanel extends JPanel {
 
-  private LogFilter logFilter;
-  private JCheckBox box;
-  private LogFilterValueChangeListener listener;
+  private final LogFilter logFilter;
+  private final JCheckBox box;
+  private final LogFilterValueChangeListener listener;
 
   public FilterPanel(LogFilter logFilter, LogFilterValueChangeListener listener) {
     super();
@@ -38,15 +38,11 @@ public class FilterPanel extends JPanel {
     logFilter.setValueChangeListener(listener);
     box = new JCheckBox(logFilter.getName());
     box.setSelected(logFilter.isEnable());
-    box.addChangeListener(new ChangeListener() {
-
-      @Override
-      public void stateChanged(ChangeEvent e) {
-        boolean selected = box.isSelected();
-        // Ignore rest events like arm or isPressed
-        if (selected != FilterPanel.this.logFilter.isEnable()) {
-          update();
-        }
+    box.addChangeListener(e -> {
+      boolean selected = box.isSelected();
+      // Ignore rest events like arm or isPressed
+      if (selected != FilterPanel.this.logFilter.isEnable()) {
+        update();
       }
     });
 
@@ -64,7 +60,7 @@ public class FilterPanel extends JPanel {
     if (gui != null) {
       if (selected) {
         add(gui, "span, wrap, growx");
-        gui.setEnabled(selected);
+        gui.setEnabled(true);
       } else {
         remove(gui);
       }

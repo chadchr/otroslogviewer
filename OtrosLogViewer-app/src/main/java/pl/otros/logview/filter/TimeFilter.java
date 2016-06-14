@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,17 +15,13 @@
  ******************************************************************************/
 package pl.otros.logview.filter;
 
-import pl.otros.logview.LogData;
-import pl.otros.logview.gui.LogDataTableModel;
+import pl.otros.logview.api.gui.LogDataTableModel;
+import pl.otros.logview.api.model.LogData;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
@@ -35,16 +31,15 @@ public class TimeFilter extends AbstractLogFilter {
   private static final String DESCRIPTION = "Filtering events based on event time.";
 
   private Date start, end;
-  private SpinnerDateModel startM, endM;
-  private JPanel gui;
-  private ChangeListner changeListner;
-  private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-  private JCheckBox startEnable;
-  private JCheckBox endEnable;
+  private final SpinnerDateModel startM;
+  private final SpinnerDateModel endM;
+  private final JPanel gui;
+  private final JCheckBox startEnable;
+  private final JCheckBox endEnable;
 
   public TimeFilter() {
     super(NAME, DESCRIPTION);
-    changeListner = new ChangeListner();
+    MyChangeListener changeListner = new MyChangeListener();
     start = new Date();
     end = new Date();
     startM = new SpinnerDateModel();
@@ -54,22 +49,9 @@ public class TimeFilter extends AbstractLogFilter {
     endM.setValue(end);
     endM.addChangeListener(changeListner);
     startEnable = new JCheckBox("Show after date:");
-    startEnable.addActionListener(new ActionListener() {
-
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        listener.valueChanged();
-
-      }
-    });
+    startEnable.addActionListener(e -> listener.valueChanged());
     endEnable = new JCheckBox("Show before date:");
-    endEnable.addActionListener(new ActionListener() {
-
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        listener.valueChanged();
-      }
-    });
+    endEnable.addActionListener(e -> listener.valueChanged());
     gui = new JPanel(new GridLayout(4, 1));
     JSpinner startSpinner = new JSpinner(startM);
     JSpinner endSpinner = new JSpinner(endM);
@@ -104,7 +86,7 @@ public class TimeFilter extends AbstractLogFilter {
 
   }
 
-  private class ChangeListner implements ChangeListener {
+  private class MyChangeListener implements ChangeListener {
 
     @Override
     public void stateChanged(ChangeEvent e) {

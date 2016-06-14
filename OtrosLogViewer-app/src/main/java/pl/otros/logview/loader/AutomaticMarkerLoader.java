@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,30 +16,31 @@
 package pl.otros.logview.loader;
 
 import com.google.common.base.Splitter;
-import pl.otros.logview.gui.markers.AutomaticMarker;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.BaseLoader;
+import pl.otros.logview.api.pluginable.AutomaticMarker;
 import pl.otros.logview.gui.markers.PropertyFileAbstractMarker;
 import pl.otros.logview.gui.markers.RegexMarker;
 import pl.otros.logview.gui.markers.StringMarker;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class AutomaticMarkerLoader {
 
-  private static final Logger LOGGER = Logger.getLogger(AutomaticMarker.class.getName());
-  private static BaseLoader baseLoader = new BaseLoader();
+  private static final Logger LOGGER = LoggerFactory.getLogger(AutomaticMarker.class.getName());
+  private static final BaseLoader baseLoader = new BaseLoader();
 
   public static ArrayList<AutomaticMarker> loadInternalMarkers() throws IOException {
 
 
-    ArrayList<AutomaticMarker> markers = new ArrayList<AutomaticMarker>();
+    ArrayList<AutomaticMarker> markers = new ArrayList<>();
     Properties p = new Properties();
     p.load(AutomaticMarkerLoader.class.getClassLoader().getResourceAsStream("markers.properties"));
     final Iterable<String> defaultMarkers = Splitter.on(',').split(p.getProperty("defaultMarkers"));
@@ -48,12 +49,8 @@ public class AutomaticMarkerLoader {
         Class<?> c = AutomaticMarkerLoader.class.getClassLoader().loadClass(line);
         AutomaticMarker am = (AutomaticMarker) c.newInstance();
         markers.add(am);
-      } catch (ClassNotFoundException e) {
-        LOGGER.log(Level.SEVERE, "Error loading class " + line, e);
-      } catch (InstantiationException e) {
-        LOGGER.log(Level.SEVERE, "Error loading class " + line, e);
-      } catch (IllegalAccessException e) {
-        LOGGER.log(Level.SEVERE, "Error loading class " + line, e);
+      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+        LOGGER.error("Error loading class " + line, e);
       }
     }
 
@@ -62,26 +59,20 @@ public class AutomaticMarkerLoader {
   }
 
   public static ArrayList<AutomaticMarker> load(File dir) {
-    ArrayList<AutomaticMarker> markers = new ArrayList<AutomaticMarker>();
+    ArrayList<AutomaticMarker> markers = new ArrayList<>();
     markers.addAll(baseLoader.load(dir, AutomaticMarker.class));
     return markers;
   }
 
   public static ArrayList<AutomaticMarker> loadRegexMarkers(File dir) {
-    ArrayList<AutomaticMarker> markers = new ArrayList<AutomaticMarker>();
-    File[] files = dir.listFiles(new FileFilter() {
-
-      @Override
-      public boolean accept(File pathname) {
-        return pathname.isFile() && pathname.getName().endsWith(".regexMarker");
-      }
-    });
+    ArrayList<AutomaticMarker> markers = new ArrayList<>();
+    File[] files = dir.listFiles(pathname -> pathname.isFile() && pathname.getName().endsWith(".regexMarker"));
     if (files != null) {
       for (File file : files) {
         try {
           markers.add(loadRegexMarkerFromProperties(file));
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Cannot initialize RegexMarker from file " + file.getName(), e);
+          LOGGER.error("Cannot initialize RegexMarker from file " + file.getName(), e);
         }
       }
     }
@@ -89,20 +80,14 @@ public class AutomaticMarkerLoader {
   }
 
   public static ArrayList<AutomaticMarker> loadStringMarkers(File dir) {
-    ArrayList<AutomaticMarker> markers = new ArrayList<AutomaticMarker>();
-    File[] files = dir.listFiles(new FileFilter() {
-
-      @Override
-      public boolean accept(File pathname) {
-        return pathname.isFile() && pathname.getName().endsWith(".stringMarker");
-      }
-    });
+    ArrayList<AutomaticMarker> markers = new ArrayList<>();
+    File[] files = dir.listFiles(pathname -> pathname.isFile() && pathname.getName().endsWith(".stringMarker"));
     if (files != null) {
       for (File file : files) {
         try {
           markers.add(loadStringMarkerFromProperties(file));
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Cannot initialize StringMarker from file " + file.getName(), e);
+          LOGGER.error("Cannot initialize StringMarker from file " + file.getName(), e);
         }
       }
     }
@@ -111,17 +96,28 @@ public class AutomaticMarkerLoader {
 
   private static AutomaticMarker loadRegexMarkerFromProperties(File file) throws Exception {
     Properties p = new Properties();
-    p.load(new FileInputStream(file));
-    RegexMarker marker = new RegexMarker(p);
-    marker.setFileName(file.getName());
+    RegexMarker marker = null;
+    try (FileInputStream is = new FileInputStream(file)) {
+      p.load(is);
+      marker = new RegexMarker(p);
+      marker.setFileName(file.getName());
+    } catch (Exception e) {
+      throw e;
+    }
+
     return marker;
   }
 
   private static AutomaticMarker loadStringMarkerFromProperties(File file) throws Exception {
     Properties p = new Properties();
-    p.load(new FileInputStream(file));
-    StringMarker marker = new StringMarker(p);
-    marker.setFileName(file.getName());
+    StringMarker marker = null;
+    try (FileInputStream is = new FileInputStream(file)) {
+      p.load(is);
+      marker = new StringMarker(p);
+      marker.setFileName(file.getName());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     return marker;
   }
 
@@ -140,24 +136,16 @@ public class AutomaticMarkerLoader {
   }
 
   public static Collection<? extends AutomaticMarker> loadPatternMarker(File dir) {
-    ArrayList<AutomaticMarker> markers = new ArrayList<AutomaticMarker>();
-    File[] files = dir.listFiles(new FileFilter() {
-
-      @Override
-      public boolean accept(File pathname) {
-        return pathname.isFile() && pathname.getName().endsWith(".marker");
-      }
-    });
+    ArrayList<AutomaticMarker> markers = new ArrayList<>();
+    File[] files = dir.listFiles(pathname -> pathname.isFile() && pathname.getName().endsWith(".marker"));
     if (files != null) {
       for (File file : files) {
-        try {
+        try (FileInputStream fin = new FileInputStream(file)) {
           Properties p = new Properties();
-          FileInputStream fin = new FileInputStream(file);
           p.load(fin);
           markers.add(loadPropertyBasedMarker(p));
-          fin.close();
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Cannot initialize RegexMarker from file " + file.getName(), e);
+          LOGGER.error("Cannot initialize RegexMarker from file " + file.getName(), e);
         }
       }
     }

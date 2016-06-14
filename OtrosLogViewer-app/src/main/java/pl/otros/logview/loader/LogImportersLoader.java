@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,28 +15,36 @@
  ******************************************************************************/
 package pl.otros.logview.loader;
 
-import pl.otros.logview.importer.*;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.BaseLoader;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.importer.LogImporter;
+import pl.otros.logview.api.importer.LogImporterUsingParser;
+import pl.otros.logview.api.parser.LogParser;
+import pl.otros.logview.importer.Log4jSerilizedLogImporter;
+import pl.otros.logview.importer.UtilLoggingXmlLogImporter;
 import pl.otros.logview.importer.log4jxml.Log4jXmlLogImporter;
-import pl.otros.logview.parser.JulSimpleFormmaterParser;
-import pl.otros.logview.parser.LogParser;
+import pl.otros.logview.importer.logback.LogbackSocketLogImporter;
+import pl.otros.logview.parser.JulSimpleFormatterParser;
+import pl.otros.logview.parser.json.JsonLogParser;
 import pl.otros.logview.parser.log4j.Log4jPatternMultilineLogParser;
+import pl.otros.logview.parser.log4j.Log4jUtil;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import pl.otros.logview.parser.log4j.Log4jUtil;
+import java.util.stream.Collectors;
 
 public class LogImportersLoader {
 
-  public static final Logger LOGGER = Logger.getLogger(LogImportersLoader.class.getName());
-  private BaseLoader baseLoader = new BaseLoader();
+  public static final Logger LOGGER = LoggerFactory.getLogger(LogImportersLoader.class.getName());
+  private final BaseLoader baseLoader = new BaseLoader();
 
   public Collection<LogImporter> loadInternalLogImporters() throws InitializationException {
-    ArrayList<LogImporter> list = new ArrayList<LogImporter>();
+    ArrayList<LogImporter> list = new ArrayList<>();
 
     Properties p = new Properties();
 
@@ -44,7 +52,7 @@ public class LogImportersLoader {
     xmlLogImporter2.init(p);
     list.add(xmlLogImporter2);
 
-    JulSimpleFormmaterParser julSimpleFormmaterParser = new JulSimpleFormmaterParser();
+    JulSimpleFormatterParser julSimpleFormmaterParser = new JulSimpleFormatterParser();
     LogImporterUsingParser julImporter = new LogImporterUsingParser(julSimpleFormmaterParser);
     julImporter.init(p);
     list.add(julImporter);
@@ -57,54 +65,46 @@ public class LogImportersLoader {
     log4jSerilizedLogImporter.init(new Properties());
     list.add(log4jSerilizedLogImporter);
 
+    LogbackSocketLogImporter logbackSockeLogImporter = new LogbackSocketLogImporter();
+    logbackSockeLogImporter.init(new Properties());
+    list.add(logbackSockeLogImporter);
+
     return list;
 
   }
 
   public Collection<LogImporter> load(File dir) {
-    Set<LogImporter> logImporters = new HashSet<LogImporter>();
+    Set<LogImporter> logImporters = new HashSet<>();
     if (!dir.exists()) {
       // dir not exist!
-      return new ArrayList<LogImporter>();
+      return new ArrayList<>();
     }
-    File[] files = dir.listFiles(new FileFilter() {
-
-      @Override
-      public boolean accept(File pathname) {
-        if (pathname.isDirectory() || pathname.getName().endsWith(".jar") || pathname.getName().endsWith(".zip")) {
-          return true;
-        }
-        return false;
-      }
-
-    });
-    for (int i = 0; i < files.length; i++) {
-      Collection<LogImporter> m = null;
+    File[] files = dir.listFiles(pathname -> pathname.isDirectory() || pathname.getName().endsWith(".jar") || pathname.getName().endsWith(".zip"));
+    for (File file : files) {
+      Collection<LogImporter> m;
       try {
-        if (files[i].isDirectory()) {
-          m = loadFromDir(files[i]);
+        if (file.isDirectory()) {
+          m = loadFromDir(file);
         } else {
-          m = loadFromJar(files[i]);
+          m = loadFromJar(file);
         }
         logImporters.addAll(m);
 
       } catch (IOException e) {
         // TODO Auto-generated catch block
-        LOGGER.log(Level.SEVERE, "IOException", e);
+        LOGGER.error("IOException", e);
       } catch (ClassNotFoundException e) {
         // TODO Auto-generated catch block
-        LOGGER.log(Level.SEVERE, "ClassNotFoundException", e);
+        LOGGER.error("ClassNotFoundException", e);
       }
     }
     return logImporters;
   }
 
   private Collection<LogImporter> loadFromJar(File file) throws IOException, ClassNotFoundException {
-    ArrayList<LogImporter> importers = new ArrayList<LogImporter>();
+    ArrayList<LogImporter> importers = new ArrayList<>();
     Collection<LogImporter> implementationClasses = baseLoader.loadFromJar(file, LogImporter.class);
-    for (LogImporter logImporter : implementationClasses) {
-      importers.add(logImporter);
-    }
+    importers.addAll(implementationClasses.stream().collect(Collectors.toList()));
 
     Collection<LogParser> logParsers = baseLoader.loadFromJar(file, LogParser.class);
     for (LogParser logParser : logParsers) {
@@ -116,23 +116,16 @@ public class LogImportersLoader {
   }
 
   public Collection<LogImporter> loadPropertyPatternFileFromDir(File dir)
-  throws InitializationException {
-    ArrayList<LogImporter> logImporters = new ArrayList<LogImporter>();
-    File[] listFiles = dir.listFiles(new FileFilter() {
-
-      @Override
-      public boolean accept(File pathname) {
-        return (pathname.isFile() && pathname.getName().endsWith("pattern"));
-      }
-
-    });
+    throws InitializationException {
+    ArrayList<LogImporter> logImporters = new ArrayList<>();
+    File[] listFiles = dir.listFiles(pathname -> (pathname.isFile() && pathname.getName().endsWith("pattern")));
     if (listFiles != null) {
       StringBuilder exceptionMessages = new StringBuilder();
       for (File file : listFiles) {
-        try {
+        try (FileInputStream is = new FileInputStream(file)) {
           Properties p = new Properties();
           Log4jPatternMultilineLogParser parser = new Log4jPatternMultilineLogParser();
-          p.load(new FileInputStream(file));
+          p.load(is);
           parser.getParserDescription().setFile(file.getAbsolutePath());
           if (p.getProperty(Log4jPatternMultilineLogParser.PROPERTY_TYPE, "").equals("log4j")) {
             LogImporterUsingParser logImporter = new LogImporterUsingParser(parser);
@@ -144,15 +137,19 @@ public class LogImportersLoader {
             LogImporterUsingParser logImporter = new LogImporterUsingParser(parser);
             logImporter.init(p);
             logImporters.add(logImporter);
+          } else if (p.getProperty(Log4jPatternMultilineLogParser.PROPERTY_TYPE, "").equals("json")) {
+            final JsonLogParser jsonLogParser = new JsonLogParser();
+            jsonLogParser.init(p);
+            logImporters.add(new LogImporterUsingParser(jsonLogParser));
           } else {
-            LOGGER.log(Level.SEVERE, "Unknown log type: " + p.getProperty(Log4jPatternMultilineLogParser.PROPERTY_TYPE, ""));
+            LOGGER.error("Unknown log type: " + p.getProperty(Log4jPatternMultilineLogParser.PROPERTY_TYPE, ""));
           }
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE,
-                  "Can't load property file based logger [" + file.getName() + ": " + e.getMessage(), e);
+          LOGGER.error(
+            "Can't load property file based logger [" + file.getName() + ": " + e.getMessage(), e);
           if (exceptionMessages.length() > 0) exceptionMessages.append("\n");
           exceptionMessages.append("Can't load property file based logger [")
-                  .append(file.getName()).append(": ").append(e.getMessage());
+            .append(file.getName()).append(": ").append(e.getMessage());
         }
       }
       if (exceptionMessages.length() > 0)
@@ -162,8 +159,8 @@ public class LogImportersLoader {
   }
 
   // TODO
-  private ArrayList<LogImporter> loadFromDir(File file) {
-
-    return new ArrayList<LogImporter>();
+  private ArrayList<LogImporter> loadFromDir(File dir) {
+    LOGGER.debug("Will not load from dir {}, method is not implemented", dir.getAbsolutePath());
+    return new ArrayList<>();
   }
 }

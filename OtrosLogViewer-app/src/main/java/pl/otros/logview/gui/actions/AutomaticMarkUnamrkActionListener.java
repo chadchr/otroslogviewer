@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,10 @@
  ******************************************************************************/
 package pl.otros.logview.gui.actions;
 
-import pl.otros.logview.LogData;
-import pl.otros.logview.gui.LogDataTableModel;
-import pl.otros.logview.gui.StatusObserver;
-import pl.otros.logview.gui.markers.AutomaticMarker;
+import pl.otros.logview.api.StatusObserver;
+import pl.otros.logview.api.gui.LogDataTableModel;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.pluginable.AutomaticMarker;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,7 +33,7 @@ public class AutomaticMarkUnamrkActionListener implements ActionListener {
   private AutomaticMarker automaticMarker;
   private boolean mode = true;
 
-  private StatusObserver observer;
+  private final StatusObserver observer;
 
   public AutomaticMarkUnamrkActionListener(LogDataTableModel dataTableModel, AutomaticMarker automaticMarker, boolean mode, StatusObserver observer) {
     super();
@@ -46,7 +46,7 @@ public class AutomaticMarkUnamrkActionListener implements ActionListener {
   @Override
   public void actionPerformed(ActionEvent e) {
     int size = dataTableModel.getRowCount();
-    ArrayList<Integer> rows = new ArrayList<Integer>();
+    ArrayList<Integer> rows = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       LogData l = dataTableModel.getLogData(i);
       if (automaticMarker.toMark(l)) {

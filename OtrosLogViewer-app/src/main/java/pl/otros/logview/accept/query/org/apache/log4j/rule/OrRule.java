@@ -17,13 +17,13 @@
 
 package pl.otros.logview.accept.query.org.apache.log4j.rule;
 
-import pl.otros.logview.LogData;
+import pl.otros.logview.api.model.LogData;
 
 import java.util.*;
 
 /**
  * A Rule class implementing logical or.
- * 
+ *
  * @author Scott Deboy (sdeboy@apache.org)
  * @author Krzysztof Otrebski
  */
@@ -32,7 +32,7 @@ public class OrRule extends AbstractRule {
   /**
    * Serialization ID.
    */
-  static final long serialVersionUID = 2088765995061413165L;
+  private static final long serialVersionUID = 2088765995061413165L;
   /**
    * rule 1.
    */
@@ -44,11 +44,9 @@ public class OrRule extends AbstractRule {
 
   /**
    * Create new instance.
-   * 
-   * @param firstParam
-   *          first rule
-   * @param secondParam
-   *          second rule
+   *
+   * @param firstParam  first rule
+   * @param secondParam second rule
    */
   private OrRule(final Rule firstParam, final Rule secondParam) {
     super();
@@ -58,11 +56,9 @@ public class OrRule extends AbstractRule {
 
   /**
    * Create new instance.
-   * 
-   * @param firstParam
-   *          first rule
-   * @param secondParam
-   *          second rule
+   *
+   * @param firstParam  first rule
+   * @param secondParam second rule
    * @return new instance
    */
   public static Rule getRule(final Rule firstParam, final Rule secondParam) {
@@ -71,9 +67,8 @@ public class OrRule extends AbstractRule {
 
   /**
    * Create new instance from top two elements of stack.
-   * 
-   * @param stack
-   *          stack
+   *
+   * @param stack stack
    * @return new instance
    */
   public static Rule getRule(final Stack<Object> stack) {
@@ -93,7 +88,7 @@ public class OrRule extends AbstractRule {
   /**
    * {@inheritDoc}
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public boolean evaluate(final LogData event, Map matches) {
     if (matches == null) {
       return (rule1.evaluate(event, null) || rule2.evaluate(event, null));
@@ -105,8 +100,8 @@ public class OrRule extends AbstractRule {
     boolean result2 = rule2.evaluate(event, tempMatches2);
     boolean result = result1 || result2;
     if (result) {
-      for (Iterator iter = tempMatches1.entrySet().iterator(); iter.hasNext();) {
-        Map.Entry entry = (Map.Entry) iter.next();
+      for (Object o1 : tempMatches1.entrySet()) {
+        Map.Entry entry = (Map.Entry) o1;
         Object key = entry.getKey();
         Set value = (Set) entry.getValue();
         Set mainSet = (Set) matches.get(key);
@@ -116,8 +111,8 @@ public class OrRule extends AbstractRule {
         }
         mainSet.addAll(value);
       }
-      for (Iterator iter = tempMatches2.entrySet().iterator(); iter.hasNext();) {
-        Map.Entry entry = (Map.Entry) iter.next();
+      for (Object o : tempMatches2.entrySet()) {
+        Map.Entry entry = (Map.Entry) o;
         Object key = entry.getKey();
         Set value = (Set) entry.getValue();
         Set mainSet = (Set) matches.get(key);

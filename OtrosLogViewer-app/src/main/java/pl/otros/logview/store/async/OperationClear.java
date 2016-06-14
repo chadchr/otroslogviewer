@@ -1,11 +1,11 @@
 package pl.otros.logview.store.async;
 
-import pl.otros.logview.store.LogDataStore;
+import pl.otros.logview.api.model.LogDataStore;
 
 import java.util.concurrent.Callable;
 
 class OperationClear implements Callable<Integer> {
-  private LogDataStore logDataStore;
+  private final LogDataStore logDataStore;
 
   public OperationClear(LogDataStore logDataStore) {
     this.logDataStore = logDataStore;
@@ -13,6 +13,6 @@ class OperationClear implements Callable<Integer> {
 
   @Override
   public Integer call() {
-     return logDataStore.clear();
+    return logDataStore.clear();
   }
 }

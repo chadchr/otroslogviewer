@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,9 @@ import java.awt.event.AdjustmentListener;
 
 public class LogViewTableWithUMLSynchronizer implements AdjustmentListener, ListSelectionListener {
 
-  private JTable table;
-  private LogUmlMapper logUmlMapper;
-  private UMLModel umlModel;
+  private final JTable table;
+  private final LogUmlMapper logUmlMapper;
+  private final UMLModel umlModel;
 
   public LogViewTableWithUMLSynchronizer(JTable table2, UMLModel umlModel) {
     this.table = table2;

@@ -7,26 +7,25 @@ import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXHyperlink;
 import org.jdesktop.swingx.JXPanel;
 import org.jdesktop.swingx.JXTextField;
-import pl.otros.logview.gui.ConfKeys;
-import pl.otros.logview.gui.Icons;
-import pl.otros.logview.gui.OtrosApplication;
-import pl.otros.logview.gui.services.Services;
-import pl.otros.logview.gui.services.jumptocode.JumpToCodeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.ConfKeys;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.gui.Icons;
+import pl.otros.logview.api.services.JumpToCodeService;
+import pl.otros.logview.api.services.Services;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class IdeIntegrationConfigurationPanel extends JXPanel {
-  private static final Logger LOGGER = Logger.getLogger(IdeIntegrationConfigurationPanel.class.getName());
-  private SpinnerNumberModel spinnerNumberModel;
-  private JXTextField hostNameTextField;
-  private JCheckBox enableAutoJumping;
-  private JCheckBox enabledJumpFromStarckTraceCBox;
+  private static final Logger LOGGER = LoggerFactory.getLogger(IdeIntegrationConfigurationPanel.class.getName());
+  private final SpinnerNumberModel spinnerNumberModel;
+  private final JXTextField hostNameTextField;
+  private final JCheckBox enableAutoJumping;
+  private final JCheckBox enabledJumpFromStarckTraceCBox;
 
   public IdeIntegrationConfigurationPanel(final OtrosApplication otrosApplication) {
     DataConfiguration configuration = otrosApplication.getConfiguration();
@@ -50,17 +49,14 @@ public class IdeIntegrationConfigurationPanel extends JXPanel {
     portLabel.setLabelFor(portSpinner);
     final JXButton testConnectivityButton = new JXButton("Test connectivity", Icons.STATUS_UNKNOWN);
     testConnectivityButton.setMnemonic('t');
-    testConnectivityButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        Services services = otrosApplication.getServices();
-        JumpToCodeService jumpToCodeService = services.getJumpToCodeService();
-        boolean ideAvailable = jumpToCodeService.isIdeAvailable(hostNameTextField.getText(), spinnerNumberModel.getNumber().intValue());
-        if (ideAvailable) {
-          testConnectivityButton.setIcon(Icons.STATUS_OK);
-        } else {
-          testConnectivityButton.setIcon(Icons.STATUS_ERROR);
-        }
+    testConnectivityButton.addActionListener(e -> {
+      Services services = otrosApplication.getServices();
+      JumpToCodeService jumpToCodeService = services.getJumpToCodeService();
+      boolean ideAvailable = jumpToCodeService.isIdeAvailable(hostNameTextField.getText(), spinnerNumberModel.getNumber().intValue());
+      if (ideAvailable) {
+        testConnectivityButton.setIcon(Icons.STATUS_OK);
+      } else {
+        testConnectivityButton.setIcon(Icons.STATUS_ERROR);
       }
     });
 
@@ -82,14 +78,11 @@ public class IdeIntegrationConfigurationPanel extends JXPanel {
       @Override
       public void actionPerformed(ActionEvent e) {
         ListeningScheduledExecutorService listeningScheduledExecutorService = otrosApplication.getServices().getTaskSchedulerService().getListeningScheduledExecutorService();
-        listeningScheduledExecutorService.submit(new Runnable() {
-          @Override
-          public void run() {
-            try {
-              Desktop.getDesktop().browse(new URI("https://github.com/otros-systems/otroslogviewer/wiki/JumpToCode"));
-            } catch (Exception e1) {
-              LOGGER.log(Level.SEVERE, "Can't open page", e1);
-            }
+        listeningScheduledExecutorService.submit(() -> {
+          try {
+            Desktop.getDesktop().browse(new URI("https://github.com/otros-systems/otroslogviewer/wiki/JumpToCode"));
+          } catch (Exception e1) {
+            LOGGER.error("Can't open page", e1);
           }
         });
       }

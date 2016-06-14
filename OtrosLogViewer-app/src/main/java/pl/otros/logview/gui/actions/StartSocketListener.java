@@ -34,15 +34,16 @@ import org.apache.commons.configuration.BaseConfiguration;
 
 import net.miginfocom.swing.MigLayout;
 import pl.otros.logview.BufferingLogDataCollectorProxy;
-import pl.otros.logview.gui.ConfKeys;
-import pl.otros.logview.gui.Icons;
-import pl.otros.logview.gui.LogViewPanelWrapper;
-import pl.otros.logview.gui.OtrosApplication;
-import pl.otros.logview.gui.StatusObserver;
+import pl.otros.logview.api.ConfKeys;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.StatusObserver;
+import pl.otros.logview.api.TableColumns;
+import pl.otros.logview.api.gui.Icons;
+import pl.otros.logview.api.gui.LogViewPanelWrapper;
+import pl.otros.logview.api.gui.OtrosAction;
+import pl.otros.logview.api.importer.LogImporter;
+import pl.otros.logview.api.pluginable.AllPluginables;
 import pl.otros.logview.gui.config.LogTableFormatConfigView;
-import pl.otros.logview.gui.table.TableColumns;
-import pl.otros.logview.importer.LogImporter;
-import pl.otros.logview.pluginable.AllPluginables;
 import pl.otros.logview.reader.SocketLogReader;
 import pl.otros.swing.table.ColumnLayout;
 
@@ -53,9 +54,9 @@ public class StartSocketListener extends OtrosAction {
 
   private LogViewPanelWrapper logViewPanelWrapper;
 
-  public StartSocketListener(OtrosApplication otrosApplication,Collection<SocketLogReader> logReaders) {
-		super(otrosApplication);
-		this.logReaders = logReaders;
+  public StartSocketListener(OtrosApplication otrosApplication, Collection<SocketLogReader> logReaders) {
+    super(otrosApplication);
+    this.logReaders = logReaders;
     putValue(Action.NAME, "Start socket listener");
     putValue(Action.SHORT_DESCRIPTION, "Start socket listener on port.");
     putValue(Action.LONG_DESCRIPTION, "Start socket listener on port.");
@@ -102,8 +103,9 @@ public class StartSocketListener extends OtrosAction {
     }
 
 
-    getOtrosApplication().addClosableTab("Socket listener","Socket listener",Icons.PLUGIN_CONNECT,logViewPanelWrapper,true);
+    getOtrosApplication().addClosableTab("Socket listener", "Socket listener", Icons.PLUGIN_CONNECT, logViewPanelWrapper, true);
 
+    //TODO solve this warning
     SocketLogReader logReader = null;
     if (logReader == null || logReader.isClosed()) {
       logReader = new SocketLogReader(chooseLogImporter.logImporter, logDataCollector, observer, chooseLogImporter.port);
@@ -123,7 +125,7 @@ public class StartSocketListener extends OtrosAction {
     String defaultImporterName = this.getOtrosApplication().getConfiguration().getString(ConfKeys.DEFAULTS_LOGIMPORTER, null);
     int defaultImporterIdx = -1;
     Collection<LogImporter> elements = AllPluginables.getInstance().getLogImportersContainer().getElements();
-    LogImporter[] importers = elements.toArray(new LogImporter[0]);
+    LogImporter[] importers = elements.toArray(new LogImporter[elements.size()]);
     String[] names = new String[elements.size()];
     for (int i = 0; i < names.length; i++) {
       names[i] = importers[i].getName();
@@ -174,8 +176,8 @@ public class StartSocketListener extends OtrosAction {
 
   public static class LogImporterAndPort {
 
-    private int port;
-    private LogImporter logImporter;
+    private final int port;
+    private final LogImporter logImporter;
 
     public LogImporterAndPort(LogImporter logImporter, int port) {
       this.logImporter = logImporter;

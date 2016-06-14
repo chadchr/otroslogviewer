@@ -17,7 +17,7 @@
 
 package pl.otros.logview.accept.query.org.apache.log4j.rule;
 
-import pl.otros.logview.LogData;
+import pl.otros.logview.api.model.LogData;
 
 import java.awt.*;
 import java.io.Serializable;
@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * A Rule class which also holds a color.
- * 
+ *
  * @author Scott Deboy (sdeboy@apache.org)
  * @author Krzysztof Otrebski
  */
@@ -34,7 +34,7 @@ public class ColorRule extends AbstractRule implements Serializable {
   /**
    * Serialization id.
    */
-  static final long serialVersionUID = -794434783372847773L;
+  private static final long serialVersionUID = -794434783372847773L;
 
   /**
    * Wrapped rule.
@@ -55,15 +55,11 @@ public class ColorRule extends AbstractRule implements Serializable {
 
   /**
    * Create new instance.
-   * 
-   * @param expression
-   *          expression.
-   * @param rule
-   *          rule.
-   * @param backgroundColor
-   *          background color.
-   * @param foregroundColor
-   *          foreground color.
+   *
+   * @param expression      expression.
+   * @param rule            rule.
+   * @param backgroundColor background color.
+   * @param foregroundColor foreground color.
    */
   public ColorRule(final String expression, final Rule rule, final Color backgroundColor, final Color foregroundColor) {
     super();
@@ -75,7 +71,7 @@ public class ColorRule extends AbstractRule implements Serializable {
 
   /**
    * Get rule.
-   * 
+   *
    * @return underlying rule.
    */
   public Rule getRule() {
@@ -84,7 +80,7 @@ public class ColorRule extends AbstractRule implements Serializable {
 
   /**
    * Get foreground color.
-   * 
+   *
    * @return foreground color.
    */
   public Color getForegroundColor() {
@@ -93,7 +89,7 @@ public class ColorRule extends AbstractRule implements Serializable {
 
   /**
    * Get background color.
-   * 
+   *
    * @return background color.
    */
   public Color getBackgroundColor() {
@@ -102,7 +98,7 @@ public class ColorRule extends AbstractRule implements Serializable {
 
   /**
    * Get expression.
-   * 
+   *
    * @return expression.
    */
   public String getExpression() {
@@ -121,14 +117,12 @@ public class ColorRule extends AbstractRule implements Serializable {
    * {@inheritDoc}
    */
   public String toString() {
-    StringBuffer buf = new StringBuffer("color rule - expression: ");
-    buf.append(expression);
-    buf.append(", rule: ");
-    buf.append(rule);
-    buf.append(" bg: ");
-    buf.append(backgroundColor);
-    buf.append(" fg: ");
-    buf.append(foregroundColor);
-    return buf.toString();
+    return "color rule - expression: " + expression +
+      ", rule: " +
+      rule +
+      " bg: " +
+      backgroundColor +
+      " fg: " +
+      foregroundColor;
   }
 }

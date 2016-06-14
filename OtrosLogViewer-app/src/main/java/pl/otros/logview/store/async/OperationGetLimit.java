@@ -1,11 +1,11 @@
 package pl.otros.logview.store.async;
 
-import pl.otros.logview.store.LogDataStore;
+import pl.otros.logview.api.model.LogDataStore;
 
 import java.util.concurrent.Callable;
 
 class OperationGetLimit implements Callable<Integer> {
-  private LogDataStore logDataStore;
+  private final LogDataStore logDataStore;
 
   public OperationGetLimit(LogDataStore logDataStore) {
     this.logDataStore = logDataStore;
@@ -13,6 +13,6 @@ class OperationGetLimit implements Callable<Integer> {
 
   @Override
   public Integer call() {
-     return logDataStore.getLimit();
+    return logDataStore.getLimit();
   }
 }

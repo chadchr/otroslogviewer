@@ -3,34 +3,27 @@ package pl.otros.logview.gui.renderers;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import org.apache.commons.lang.StringUtils;
-import pl.otros.logview.gui.ClassWrapper;
+import pl.otros.logview.api.model.ClassWrapper;
 
 import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 public class ClassWrapperRenderer implements TableCellRenderer {
 
-  private final Comparator<String> stringLengthComparator = new Comparator<String>() {
-    @Override
-    public int compare(String o1, String o2) {
-      int result = o2.length() - o1.length();
-      if (result == 0) {
-        result = o1.compareTo(o2);
-      }
-      return result;
+  private final Comparator<String> stringLengthComparator = (o1, o2) -> {
+    int result = o2.length() - o1.length();
+    if (result == 0) {
+      result = o1.compareTo(o2);
     }
+    return result;
   };
 
   private SortedMap<String, String> replacements;
-  private JLabel label;
+  private final JLabel label;
 
 
   public ClassWrapperRenderer() {
@@ -67,28 +60,28 @@ public class ClassWrapperRenderer implements TableCellRenderer {
   }
 
   public String abbreviatePackagesToSingleLetter(String abbreviatePackage, int availableWidth, FontMetrics fm) {
-    if (fm.stringWidth(abbreviatePackage) > availableWidth) {
-      final java.util.List<String> split = Splitter.on('.').splitToList(abbreviatePackage);
+    String result = abbreviatePackage;
+    if (fm.stringWidth(result) > availableWidth) {
+      final java.util.List<String> split = Splitter.on('.').splitToList(result);
       int index = 0;
-      while (fm.stringWidth(abbreviatePackage) > availableWidth && index < split.size() - 1) {
-        java.util.List<String> list = new ArrayList<String>(split.size());
+      while (fm.stringWidth(result) > availableWidth && index < split.size() - 1) {
+        java.util.List<String> list = new ArrayList<>(split.size());
         for (int i = 0; i < split.size(); i++) {
           final String s = split.get(i);
-          list.add(i <= index && s.length()>0 ? s.substring(0, 1) : s);
+          list.add(i <= index && s.length() > 0 ? s.substring(0, 1) : s);
         }
-        abbreviatePackage = Joiner.on(".").join(list);
+        result = Joiner.on(".").join(list);
         index++;
       }
     }
-    return abbreviatePackage;
+    return result;
   }
 
-  SortedMap<String, String> toMap(String configuration) {
-    configuration = StringUtils.defaultString(configuration);
+  protected SortedMap<String, String> toMap(String configuration) {
     Properties p = new Properties();
-    SortedMap<String, String> result = new TreeMap<String, String>(stringLengthComparator);
+    SortedMap<String, String> result = new TreeMap<>(stringLengthComparator);
     try {
-      p.load(new StringReader(configuration));
+      p.load(new StringReader(StringUtils.defaultString(configuration)));
       for (Object o : p.keySet()) {
         final String key = o.toString();
         final String value = p.getProperty(key);
@@ -100,7 +93,7 @@ public class ClassWrapperRenderer implements TableCellRenderer {
     return result;
   }
 
-  String abbreviatePackageUsingMappings(String clazz, SortedMap<String, String> abbreviations) {
+  protected String abbreviatePackageUsingMappings(String clazz, SortedMap<String, String> abbreviations) {
     for (String s : abbreviations.keySet()) {
       if (clazz.startsWith(s)) {
         return StringUtils.replaceOnce(clazz, s, abbreviations.get(s));

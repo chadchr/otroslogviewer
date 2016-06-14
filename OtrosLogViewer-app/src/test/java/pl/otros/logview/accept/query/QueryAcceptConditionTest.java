@@ -16,18 +16,19 @@
 
 package pl.otros.logview.accept.query;
 
-import static org.testng.AssertJUnit.assertEquals;
-import org.testng.annotations.Test;
-import org.testng.annotations.BeforeMethod;
 import org.testng.Assert;
-import pl.otros.logview.LogData;
-import pl.otros.logview.LogDataBuilder;
-import pl.otros.logview.MarkerColors;
-import pl.otros.logview.Note;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.LogDataBuilder;
+import pl.otros.logview.api.model.MarkerColors;
+import pl.otros.logview.api.model.Note;
 import pl.otros.logview.accept.query.org.apache.log4j.rule.RuleException;
 
 import java.util.*;
 import java.util.logging.Level;
+
+import static org.testng.AssertJUnit.assertEquals;
 
 public class QueryAcceptConditionTest {
 
@@ -42,13 +43,13 @@ public class QueryAcceptConditionTest {
 	public void prepare() throws RuleException {
 		ldCurrentTimeLevelInfo = new LogDataBuilder().withMessage("ab")
 				.withId(2).withDate(new Date()).withLevel(Level.INFO).build();
-		Calendar cal = new GregorianCalendar(2011, 12, 01, 12, 00, 00);
+		Calendar cal = new GregorianCalendar(2011, 12, 1, 12, 0, 0);
 		ld_2011_12_01_120000 = new LogDataBuilder().withMessage("a").withId(2)
 				.withDate(new Date(cal.getTimeInMillis()))
 				.withLevel(Level.INFO).build();
 		ldWarning = new LogDataBuilder().withMessage("vab").withId(2)
 				.withDate(new Date()).withLevel(Level.WARNING).build();
-		Map<String, String> properties = new HashMap<String, String>();
+		Map<String, String> properties = new HashMap<>();
 		properties.put("key", "value");
 		properties.put("secondKey", "value2");
 		ldWithProperties = new LogDataBuilder().withMessage("with properties")

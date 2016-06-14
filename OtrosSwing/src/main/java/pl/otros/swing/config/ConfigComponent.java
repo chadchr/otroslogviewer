@@ -9,73 +9,58 @@ import org.jdesktop.swingx.JXList;
 import pl.otros.swing.config.provider.ConfigurationProvider;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class ConfigComponent extends JPanel {
-  private JLabel upLabel;
-  private JPanel centralPanel;
-  private ConfigView[] configViews;
-  private JXList list;
-  private ConfigurationProvider configurationProvider;
-  private Action actionAfterSave;
-  private Action actionAfterCancel;
+  private final ConfigView[] configViews;
+  private final ConfigurationProvider configurationProvider;
+  private final Optional<Action> actionAfterSave;
 
   public ConfigComponent(final ConfigurationProvider configurationProvider, final ConfigView... configViews) {
-    this(configurationProvider, null, null, configViews);
+    this(configurationProvider, null, configViews);
   }
 
   @SuppressWarnings("serial")
-  public ConfigComponent(final ConfigurationProvider configurationProvider, Action actionAfterSave, Action actionAfterCancel, final ConfigView... configViews) {
+  public ConfigComponent(final ConfigurationProvider configurationProvider, Action actionAfterSave, final ConfigView... configViews) {
     super();
     this.configurationProvider = configurationProvider;
-    this.actionAfterSave = actionAfterSave;
-    this.actionAfterCancel = actionAfterCancel;
+    this.actionAfterSave = Optional.ofNullable(actionAfterSave);
     this.configViews = configViews;
     this.setLayout(new MigLayout());
     JPanel leftPanel = new JPanel(new BorderLayout());
-    list = new JXList(this.configViews);
+    JXList list = new JXList(this.configViews);
     list.setCellRenderer(new ConfigViewListRenderer());
     leftPanel.add(list);
-    upLabel = new JLabel(" ");
+    JLabel upLabel = new JLabel(" ");
     upLabel.setBounds(10, 10, 10, 10);
     upLabel.setHorizontalTextPosition(SwingConstants.CENTER);
     upLabel
-        .setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(upLabel.getForeground()), BorderFactory.createEmptyBorder(4, 10, 4, 10)));
-    centralPanel = new JPanel(new BorderLayout());
-    list.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-      @Override
-      public void valueChanged(ListSelectionEvent e) {
-        if (e.getValueIsAdjusting()) {
-          return;
-        }
-        int firstIndex = list.getSelectedIndex();
-        ConfigView configView = ConfigComponent.this.configViews[firstIndex];
-        centralPanel.removeAll();
-        centralPanel.add(configView.getView());
-        upLabel.setText(configView.getName());
-        upLabel.setToolTipText(configView.getDescription());
-        centralPanel.revalidate();
-        centralPanel.repaint();
+      .setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(upLabel.getForeground()), BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+    JPanel centralPanel = new JPanel(new BorderLayout());
+    list.getSelectionModel().addListSelectionListener(e -> {
+      if (e.getValueIsAdjusting()) {
+        return;
       }
+      int firstIndex = list.getSelectedIndex();
+      ConfigView configView = ConfigComponent.this.configViews[firstIndex];
+      centralPanel.removeAll();
+      centralPanel.add(configView.getView());
+      upLabel.setText(configView.getName());
+      upLabel.setToolTipText(configView.getDescription());
+      centralPanel.revalidate();
+      centralPanel.repaint();
     });
-    reload();
+
     if (list.getModel().getSize() > 0) {
       list.setSelectedIndex(0);
     }
     final JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     JButton saveButton = new JButton("Save");
-    saveButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        saveConfig();
-      }
-    });
+    saveButton.addActionListener(e -> saveConfig());
     southPanel.add(saveButton);
     final JButton reloadButton = new JButton();
     reloadButton.setAction(new AbstractAction("Reload") {
@@ -91,6 +76,7 @@ public class ConfigComponent extends JPanel {
     this.add(new JScrollPane(centralPanel), "dock center, grow, push");
     this.add(southPanel, "dock south");
     list.requestFocus();
+    reload();
   }
 
   public void reload() {
@@ -124,7 +110,7 @@ public class ConfigComponent extends JPanel {
   }
 
   public void saveConfig() {
-    List<ValidationResult> validationErrors = new LinkedList<ValidationResult>();
+    List<ValidationResult> validationErrors = new LinkedList<>();
     StringBuilder errorsString = new StringBuilder("Following validation errors occurs:\n");
     for (ConfigView configView : configViews) {
       ValidationResult validate = configView.validate();
@@ -175,8 +161,6 @@ public class ConfigComponent extends JPanel {
       //TODO what to do?
       e.printStackTrace();
     }
-    if (actionAfterSave != null) {
-      actionAfterSave.actionPerformed(null);
-    }
+    actionAfterSave.ifPresent(a->a.actionPerformed(null));
   }
 }

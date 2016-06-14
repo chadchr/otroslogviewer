@@ -22,18 +22,21 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.VFS;
+import pl.otros.logview.api.BaseLoader;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.batch.BatchProcessingContext;
+import pl.otros.logview.api.batch.BatchProcessingListener;
+import pl.otros.logview.api.batch.LogDataParsedListener;
+import pl.otros.logview.api.batch.SingleFileBatchProcessingListener;
+import pl.otros.logview.api.importer.LogImporter;
+import pl.otros.logview.api.io.LoadingInfo;
+import pl.otros.logview.api.io.Utils;
+import pl.otros.logview.api.parser.ParsingContext;
+import pl.otros.logview.api.pluginable.AllPluginables;
 import pl.otros.logview.gui.actions.read.AutoDetectingImporterProvider;
-import pl.otros.logview.importer.InitializationException;
-import pl.otros.logview.importer.LogImporter;
-import pl.otros.logview.io.LoadingInfo;
-import pl.otros.logview.io.Utils;
-import pl.otros.logview.loader.BaseLoader;
 import pl.otros.logview.loader.LvDynamicLoader;
-import pl.otros.logview.parser.ParsingContext;
-import pl.otros.logview.pluginable.AllPluginables;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -44,11 +47,11 @@ import java.util.List;
 public class BatchProcessor {
 
   private List<String> files;
-  private BatchProcessingContext batchProcessingContext;
+  private final BatchProcessingContext batchProcessingContext;
   private LogDataParsedListener logDataParsedListener;
 
   public BatchProcessor() throws IOException, InitializationException {
-    files = new ArrayList<String>();
+    files = new ArrayList<>();
     batchProcessingContext = new BatchProcessingContext();
     LvDynamicLoader.getInstance().loadAll();
   }
@@ -62,7 +65,7 @@ public class BatchProcessor {
       return;
     }
     int i = 0;
-    ArrayList<FileObject> fileObjects = new ArrayList<FileObject>();
+    ArrayList<FileObject> fileObjects = new ArrayList<>();
     for (String file : files) {
       i++;
       FileObject resolveFile = null;
@@ -157,7 +160,7 @@ public class BatchProcessor {
       parserCmdLine.printUsage();
       System.err.println(e.getMessage());
       return;
-    }finally {
+    } finally {
       checkIfShowBatchProcessingIsEnabled(parserCmdLine);
     }
 
@@ -167,19 +170,13 @@ public class BatchProcessor {
       File f = new File(parserCmdLine.dirWithJars);
       URL[] urls = null;
       if (f.isDirectory()) {
-        File[] listFiles = f.listFiles(new FileFilter() {
-
-          @Override
-          public boolean accept(File f) {
-            return f.isFile() && f.getName().endsWith(".jar");
-          }
-        });
+        File[] listFiles = f.listFiles(f1 -> f1.isFile() && f1.getName().endsWith(".jar"));
         urls = new URL[listFiles.length];
         for (int i = 0; i < urls.length; i++) {
           urls[i] = listFiles[i].toURI().toURL();
         }
       } else if (f.getName().endsWith("jar")) {
-        urls = new URL[] { f.toURI().toURL() };
+        urls = new URL[]{f.toURI().toURL()};
       }
       if (urls == null) {
         System.err.println("Dir with additional jars or single jars do not point to dir with jars or single jar");
@@ -210,11 +207,12 @@ public class BatchProcessor {
       batchProcessor.process();
       batchProcessor.batchProcessingContext.printIfVerbose("Finished");
     } catch (Exception e) {
-        System.out.println("Error: " + e.getMessage());
-        System.out.println(Throwables.getStackTraceAsString(e));
+      System.out.println("Error: " + e.getMessage());
+      System.out.println(Throwables.getStackTraceAsString(e));
     }
   }
-  private static void checkIfShowBatchProcessingIsEnabled(CmdLineConfig parserCmdLine){
+
+  private static void checkIfShowBatchProcessingIsEnabled(CmdLineConfig parserCmdLine) {
     if (parserCmdLine.showImplementations) {
       if (parserCmdLine.dirWithJars != null) {
         showBatchProcessingClasses(parserCmdLine.dirWithJars);
@@ -227,9 +225,9 @@ public class BatchProcessor {
   private static void showBatchProcessingClasses(String dirWithJars) {
     BaseLoader baseLoader = new BaseLoader();
     Collection<LogDataParsedListener> logDataParsedListeners = baseLoader.load(new File(dirWithJars), LogDataParsedListener.class);
-    System.out.printf("Dir \"%s\" has %d available batch processing implementations:%n",dirWithJars, logDataParsedListeners.size());
+    System.out.printf("Dir \"%s\" has %d available batch processing implementations:%n", dirWithJars, logDataParsedListeners.size());
     for (LogDataParsedListener logDataParsedListener : logDataParsedListeners) {
-      System.out.printf(" - %s%n",logDataParsedListener.getClass().getName());
+      System.out.printf(" - %s%n", logDataParsedListener.getClass().getName());
     }
   }
 

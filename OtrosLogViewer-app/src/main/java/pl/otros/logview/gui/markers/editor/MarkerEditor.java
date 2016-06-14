@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,11 @@
 package pl.otros.logview.gui.markers.editor;
 
 import net.miginfocom.swing.MigLayout;
-import pl.otros.logview.LogData;
-import pl.otros.logview.MarkerColors;
-import pl.otros.logview.gui.markers.AutomaticMarker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.MarkerColors;
+import pl.otros.logview.api.pluginable.AutomaticMarker;
 import pl.otros.logview.gui.markers.PropertyFileAbstractMarker;
 import pl.otros.logview.gui.markers.RegexMarker;
 import pl.otros.logview.gui.markers.StringMarker;
@@ -35,55 +37,47 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 public class MarkerEditor extends JPanel {
 
-  private static final Logger LOGGER = Logger.getLogger(MarkerEditor.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(MarkerEditor.class.getName());
 
   private boolean changed = false;
-  private JTextField stringMatcherConditionM;
-  private JTextField file;
-  private JTextField regexPreCondition;
-  private JCheckBox ignoreCase;
-  private JCheckBox stringConditionInclude;
-  private JCheckBox regexPreConditionInclude;
-  private JTextField groups;
-  private JTextField name;
-  private JTextField description;
-  private JComboBox type;
-  private JComboBox colors;
-  private JLabel stringConditionIncludeLabel = new JLabel("Containging string:");
-  private JLabel regexPreConditionLabel = new JLabel("Precondition:");
-  private JLabel regexPreConditionIncludeLabel = new JLabel("Precondition matches:");
-  private JTextField regexMatcherCondition;
-  private JLabel stringMatcherConditionLabel = new JLabel("Condition:");
-  private JLabel regexMatcherConditionLabel = new JLabel("Regex condition:");;
+  private final JTextField stringMatcherConditionM;
+  private final JTextField file;
+  private final JTextField regexPreCondition;
+  private final JCheckBox ignoreCase;
+  private final JCheckBox stringConditionInclude;
+  private final JCheckBox regexPreConditionInclude;
+  private final JTextField groups;
+  private final JTextField name;
+  private final JTextField description;
+  private final JComboBox type;
+  private final JComboBox colors;
+  private final JLabel stringConditionIncludeLabel = new JLabel("Containging string:");
+  private final JLabel regexPreConditionLabel = new JLabel("Precondition:");
+  private final JLabel regexPreConditionIncludeLabel = new JLabel("Precondition matches:");
+  private final JTextField regexMatcherCondition;
+  private final JLabel stringMatcherConditionLabel = new JLabel("Condition:");
+  private final JLabel regexMatcherConditionLabel = new JLabel("Regex condition:");
 
-  private JTextArea[] testStringTextArea;
-  private JLabel[] testResults;
-  private Collection<JComponent> regexMatcherComponents;
-  private Collection<JComponent> stringMatcherComponents;
-  private TestAfterChangeActionListener testAfterChangeActionListener = new TestAfterChangeActionListener();
-  private HashSet<ChangeListener> changeListeners;
+  private final JTextArea[] testStringTextArea;
+  private final JLabel[] testResults;
+  private final Collection<JComponent> regexMatcherComponents;
+  private final Collection<JComponent> stringMatcherComponents;
+  private final TestAfterChangeActionListener testAfterChangeActionListener = new TestAfterChangeActionListener();
+  private final HashSet<ChangeListener> changeListeners;
 
   public MarkerEditor() {
     super(new MigLayout("wrap 2", "[20%] [grow]", ""));
-    changeListeners = new HashSet<ChangeListener>();
+    changeListeners = new HashSet<>();
 
-    regexMatcherComponents = new ArrayList<JComponent>();
-    stringMatcherComponents = new ArrayList<JComponent>();
+    regexMatcherComponents = new ArrayList<>();
+    stringMatcherComponents = new ArrayList<>();
     file = new JTextField(20);
     file.setEditable(false);
-    type = new JComboBox(new String[] { "String matcher", "Regex matcher" });
-    type.addActionListener(new ActionListener() {
-
-      @Override
-      public void actionPerformed(ActionEvent arg0) {
-        disbableUnessasaryComponents();
-
-      }
-    });
+    type = new JComboBox(new String[]{"String matcher", "Regex matcher"});
+    type.addActionListener(arg0 -> disbableUnessasaryComponents());
     type.addActionListener(testAfterChangeActionListener);
 
     ignoreCase = new JCheckBox();
@@ -213,10 +207,10 @@ public class MarkerEditor extends JPanel {
     stringConditionInclude.setToolTipText("Will match events that message contains or does not contain this string.");
     regexMatcherCondition.setToolTipText("Regular expression to match.");
     regexPreCondition
-        .setToolTipText("Part of string from regular expression for increase performance. For example if you regular exrepssion is \".*return: \\d+\" set precondition to \"return\".");
+      .setToolTipText("Part of string from regular expression for increase performance. For example if you regular exrepssion is \".*return: \\d+\" set precondition to \"return\".");
     regexPreConditionInclude.setToolTipText("Disable if you want to mark rows that does not contains precondition value.");
-    for (int i = 0; i < testStringTextArea.length; i++) {
-      testStringTextArea[i].setToolTipText("Enter part of log message to test if marker works as you want.");
+    for (JTextArea aTestStringTextArea : testStringTextArea) {
+      aTestStringTextArea.setToolTipText("Enter part of log message to test if marker works as you want.");
     }
 
   }
@@ -310,7 +304,7 @@ public class MarkerEditor extends JPanel {
   }
 
   private Collection<JComponent> addSeparator(JPanel panel, String text) {
-    ArrayList<JComponent> c = new ArrayList<JComponent>();
+    ArrayList<JComponent> c = new ArrayList<>();
     JLabel l = new JLabel(text, SwingConstants.LEADING);
     panel.add(l, "gapbottom 1, span, split 2, aligny center");
     JSeparator s = new JSeparator();
@@ -348,8 +342,8 @@ public class MarkerEditor extends JPanel {
   }
 
   private void testMarker() {
-    for (int i = 0; i < testResults.length; i++) {
-      testResults[i].setText("?");
+    for (JLabel testResult : testResults) {
+      testResult.setText("?");
     }
     try {
       AutomaticMarker marker = null;

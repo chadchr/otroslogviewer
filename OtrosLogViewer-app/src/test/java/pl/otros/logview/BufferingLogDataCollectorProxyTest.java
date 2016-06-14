@@ -19,33 +19,29 @@ import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
 import org.apache.commons.configuration.BaseConfiguration;
-import pl.otros.logview.gui.ConfKeys;
-import pl.otros.logview.reader.ProxyLogDataCollector;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.ConfKeys;
+import pl.otros.logview.api.reader.ProxyLogDataCollector;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 
 public class BufferingLogDataCollectorProxyTest {
 
-  BaseConfiguration configuration;
-  BufferingLogDataCollectorProxy bufferingLogDataCollectorProxy;
-  long sleepTime = 100;
-  ProxyLogDataCollector delegate;
+  private BufferingLogDataCollectorProxy bufferingLogDataCollectorProxy;
+  private long sleepTime = 100;
+  private ProxyLogDataCollector delegate;
 
   @BeforeMethod
   public void initTest() throws InterruptedException, InvocationTargetException {
-    configuration = new BaseConfiguration();
+    BaseConfiguration configuration = new BaseConfiguration();
     configuration.setProperty(ConfKeys.TAILING_PANEL_PLAY, true);
 
     delegate = new ProxyLogDataCollector();
     bufferingLogDataCollectorProxy = new BufferingLogDataCollectorProxy(delegate, sleepTime, configuration);
     // Initialize swing thread
-    SwingUtilities.invokeAndWait(new Runnable() {
+    SwingUtilities.invokeAndWait(() -> {
 
-      @Override
-      public void run() {
-
-      }
     });
   }
 
@@ -55,7 +51,7 @@ public class BufferingLogDataCollectorProxyTest {
     data1.setId(1);
     LogData data2 = new LogData();
     data2.setId(2);
-    LogData[] toAdd = new LogData[] { data1, data2 };
+    LogData[] toAdd = { data1, data2 };
     bufferingLogDataCollectorProxy.add(toAdd);
 
     AssertJUnit.assertArrayEquals(toAdd, bufferingLogDataCollectorProxy.getLogData());

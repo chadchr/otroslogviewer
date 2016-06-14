@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,21 +15,24 @@
  ******************************************************************************/
 package pl.otros.logview.importer;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import pl.otros.logview.LogData;
-import pl.otros.logview.LogDataCollector;
-import pl.otros.logview.gui.table.TableColumns;
-import pl.otros.logview.importer.InitializationException;
-import pl.otros.logview.importer.LogImporter;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.TableColumns;
+import pl.otros.logview.api.importer.LogImporter;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.LogDataCollector;
+import pl.otros.logview.api.parser.ParsingContext;
+import pl.otros.logview.api.parser.TableColumnNameSelfDescribable;
 import pl.otros.logview.importer.log4jxml.SAXErrorHandler;
 import pl.otros.logview.importer.log4jxml.UtilLoggingEntityResolver;
-import pl.otros.logview.parser.ParsingContext;
-import pl.otros.logview.parser.TableColumnNameSelfDescribable;
 import pl.otros.logview.pluginable.AbstractPluginableElement;
-import org.apache.commons.lang.StringUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -41,13 +44,12 @@ import java.io.*;
 import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class UtilLoggingXmlLogImporter extends AbstractPluginableElement implements LogImporter, TableColumnNameSelfDescribable {
 
   private static final String DOC_BUILDER = "DOC_BUILDER";
   private static final String PARTIAL_EVENT = "PARTIAL_EVENT";
-  private static final Logger LOGGER = Logger.getLogger(UtilLoggingXmlLogImporter.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(UtilLoggingXmlLogImporter.class.getName());
   private static final String NAME = "Improved XMLFormatter";
   private Icon icon;
   private static final String ICON_PATH = "img/java.png";
@@ -84,7 +86,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       icon = new ImageIcon(ImageIO.read(this.getClass().getClassLoader().getResourceAsStream(ICON_PATH)));
       LOGGER.info("icon loaded");
     } catch (Exception e) {
-      LOGGER.warning("Error loading icon: " + e.getMessage());
+      LOGGER.warn("Error loading icon: " + e.getMessage());
     }
 
   }
@@ -92,11 +94,9 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
   @Override
   public void importLogs(InputStream in, LogDataCollector collector, ParsingContext parsingContext) {
 
-    StringBuffer sb = new StringBuffer();
-    try {
-      LineNumberReader bin = new LineNumberReader(new InputStreamReader(in, ENCODING));
-      String line = null;
-
+    StringBuilder sb = new StringBuilder();
+    try (LineNumberReader bin = new LineNumberReader(new InputStreamReader(in, ENCODING))) {
+      String line;
       while ((line = bin.readLine()) != null) {
         sb.append(line).append("\n");
         if (bin.getLineNumber() % 30 == 0) {
@@ -104,14 +104,13 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
           sb.setLength(0);
         }
       }
-
     } catch (UnsupportedEncodingException e) {
-      LOGGER.severe("Cant load codepage " + e.getMessage());
+      LOGGER.error("Cant load codepage " + e.getMessage());
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     } finally {
       decodeEvents(sb.toString(), collector, parsingContext);
+      IOUtils.closeQuietly(in);
     }
 
   }
@@ -119,8 +118,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
   /**
    * Converts the LoggingEvent data in XML string format into an actual XML Document class instance.
    *
-   * @param data
-   *          XML fragment
+   * @param data XML fragment
    * @return dom document
    */
   private Document parse(final String data, DocumentBuilder docBuilder) {
@@ -139,7 +137,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       /**
        * resetting the length of the StringBuffer is dangerous, particularly on some JDK 1.4 impls, there's a known Bug that causes a memory leak
        */
-      StringBuffer buf = new StringBuffer(1024);
+      StringBuilder buf = new StringBuilder(1024);
 
       if (!data.startsWith("<?xml")) {
         buf.append(BEGIN_PART);
@@ -155,7 +153,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       document = docBuilder.parse(inputSource);
 
     } catch (Exception e) {
-      LOGGER.warning("Problem with creating document: " + e.getMessage());
+      LOGGER.warn("Problem with creating document: " + e.getMessage());
 
     }
 
@@ -165,8 +163,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
   /**
    * Decodes a String representing a number of events into a Vector of LoggingEvents.
    *
-   * @param document
-   *          to decode events from
+   * @param document to decode events from
    * @return Vector of LoggingEvents
    */
   public void decodeEvents(final String document, LogDataCollector collector, ParsingContext parsingContext) {
@@ -178,7 +175,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       }
 
       String newDoc;
-      String newPartialEvent = null;
+      String newPartialEvent;
       // separate the string into the last portion ending with </record>
       // (which will be processed) and the partial event which
       // will be combined and processed in the next section
@@ -202,7 +199,6 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       if (partialEvent != null) {
         newDoc = partialEvent + newDoc;
       }
-      partialEvent = newPartialEvent;
 
       Document doc = parse(newDoc, (DocumentBuilder) parsingContext.getCustomConextProperties().get(DOC_BUILDER));
       if (doc == null) {
@@ -215,8 +211,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
   /**
    * Given a Document, converts the XML into a Vector of LoggingEvents.
    *
-   * @param document
-   *          XML document
+   * @param document XML document
    * @return Vector of LoggingEvents
    */
   private void decodeEvents(final Document document, LogDataCollector collector, ParsingContext parsingContext) {
@@ -233,7 +228,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       Object message = null;
       String className = null;
       String methodName = null;
-      String exceptionStackTrace=null;
+      String exceptionStackTrace = null;
 
       // format of date: 2003-05-04T11:04:52
       // ignore date or set as a property? using millis in constructor instead
@@ -249,40 +244,29 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
         String tagName = logEventNode.getNodeName();
 
         if (tagName.equalsIgnoreCase("logger")) {
-          logger = Logger.getLogger(getCData(list.item(y)));
-        } else
-        if (tagName.equalsIgnoreCase("millis")) {
+          logger = LoggerFactory.getLogger(getCData(list.item(y)));
+        } else if (tagName.equalsIgnoreCase("millis")) {
           timeStamp = Long.parseLong(getCData(list.item(y)));
-        } else
-
-        if (tagName.equalsIgnoreCase("level")) {
+        } else if (tagName.equalsIgnoreCase("level")) {
           level = Level.parse(getCData(list.item(y)));
-        } else
-
-        if (tagName.equalsIgnoreCase("thread")) {
+        } else if (tagName.equalsIgnoreCase("thread")) {
           threadName = getCData(list.item(y));
-        } else
-
-        if (tagName.equalsIgnoreCase("message")) {
+        } else if (tagName.equalsIgnoreCase("message")) {
           message = getCData(list.item(y));
-        } else
-
-        if (tagName.equalsIgnoreCase("class")) {
+        } else if (tagName.equalsIgnoreCase("class")) {
           className = getCData(list.item(y));
-        } else
-
-        if (tagName.equalsIgnoreCase("method")) {
+        } else if (tagName.equalsIgnoreCase("method")) {
           methodName = getCData(list.item(y));
-        }  else if (tagName.equalsIgnoreCase("exception")){
+        } else if (tagName.equalsIgnoreCase("exception")) {
           exceptionStackTrace = getExceptionStackTrace(list.item(y));
 
         }
 
 
       }
-      if (message !=null && exceptionStackTrace!=null){
-        message = message + "\n"+exceptionStackTrace;
-      } else if (exceptionStackTrace!=null){
+      if (message != null && exceptionStackTrace != null) {
+        message = message + "\n" + exceptionStackTrace;
+      } else if (exceptionStackTrace != null) {
         message = exceptionStackTrace;
       }
       LogData logData = new LogData();
@@ -291,7 +275,7 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
       logData.setId(parsingContext.getGeneratedIdAndIncrease());
       logData.setDate(new Date(timeStamp));
       logData.setLoggerName(logger.getName());
-      logData.setMessage(StringUtils.defaultString(message!=null?message.toString():""));
+      logData.setMessage(StringUtils.defaultString(message != null ? message.toString() : ""));
       logData.setThread(threadName);
       logData.setMethod(methodName);
       logData.setLogSource(parsingContext.getLogSource());
@@ -300,16 +284,16 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
     }
   }
 
-  String getExceptionStackTrace(Node eventNode) {
+  protected String getExceptionStackTrace(Node eventNode) {
     StringBuilder sb = new StringBuilder();
     NodeList childNodes = eventNode.getChildNodes();
     for (int i = 0; i < childNodes.getLength(); i++) {
       Node childNode = childNodes.item(i);
-      String tagName=childNode.getNodeName();
-      if (tagName.equalsIgnoreCase("message")){
+      String tagName = childNode.getNodeName();
+      if (tagName.equalsIgnoreCase("message")) {
         sb.append(getCData(childNodes.item(i)));
-      }  else if (tagName.equalsIgnoreCase("frame")){
-        getStackTraceFrame(childNodes.item(i),sb);
+      } else if (tagName.equalsIgnoreCase("frame")) {
+        getStackTraceFrame(childNodes.item(i), sb);
       }
     }
 
@@ -317,20 +301,20 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
 
   }
 
-  void getStackTraceFrame(Node item, StringBuilder sb) {
+  protected void getStackTraceFrame(Node item, StringBuilder sb) {
     NodeList childNodes = item.getChildNodes();
 
-    String clazz=null;
+    String clazz = null;
     String method = null;
     String line = null;
     for (int i = 0; i < childNodes.getLength(); i++) {
       Node childNode = childNodes.item(i);
       String tagName = childNode.getNodeName();
-      if (tagName.equalsIgnoreCase("class")){
+      if (tagName.equalsIgnoreCase("class")) {
         clazz = getCData(childNode);
-      }  else if (tagName.equalsIgnoreCase("method")){
+      } else if (tagName.equalsIgnoreCase("method")) {
         method = getCData(childNode);
-      }  else if (tagName.equalsIgnoreCase("line")){
+      } else if (tagName.equalsIgnoreCase("line")) {
         line = getCData(childNode);
       }
     }
@@ -342,13 +326,13 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
 
   }
 
-  StringBuilder appendStackFrame(StringBuilder sb, String clazz, String method, String line, String fileName) {
+  protected StringBuilder appendStackFrame(StringBuilder sb, String clazz, String method, String line, String fileName) {
     sb.append("\n\tat ");
     sb.append(clazz).append(".").append(method);
-    if (fileName!=null){
+    if (fileName != null) {
       sb.append("(");
       sb.append(fileName).append(".java");
-      if (line!=null){
+      if (line != null) {
         sb.append(":").append(line);
       }
       sb.append(")");
@@ -356,26 +340,24 @@ public class UtilLoggingXmlLogImporter extends AbstractPluginableElement impleme
     return sb;
   }
 
-  String extractFileName(String clazz) {
-    int clazzStart = StringUtils.lastIndexOf(clazz, '.')+1;
+  protected String extractFileName(String clazz) {
+    int clazzStart = StringUtils.lastIndexOf(clazz, '.') + 1;
     clazzStart = Math.max(0, clazzStart);
     int clazzEnd = StringUtils.indexOf(clazz, '$');
-    if (clazzEnd<0){
-      clazzEnd=clazz.length();
+    if (clazzEnd < 0) {
+      clazzEnd = clazz.length();
     }
-    String fileName = StringUtils.substring(clazz, clazzStart, clazzEnd);
-    return fileName;
+    return StringUtils.substring(clazz, clazzStart, clazzEnd);
   }
 
   /**
    * Get contents of CDATASection.
    *
-   * @param n
-   *          CDATASection
+   * @param n CDATASection
    * @return text content of all text or CDATA children of node.
    */
   private String getCData(final Node n) {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     NodeList nl = n.getChildNodes();
 
     for (int x = 0; x < nl.getLength(); x++) {

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,39 +25,38 @@ import java.awt.*;
 public class JAnimatedLogo extends JLabel {
 
   private double alpha;
-  private LogoIcon icon;
-  private SwingRepaintTimeline timeline;
+  private SwingRepaintTimeline timeLine;
 
   public JAnimatedLogo(String text, int horizontalAlignment) {
     super(text, horizontalAlignment);
-    createTimeline();
+    createTimeLine();
   }
 
   public JAnimatedLogo(String text) {
     super(text);
-    createTimeline();
+    createTimeLine();
   }
 
   public JAnimatedLogo() {
     super();
-    createTimeline();
+    createTimeLine();
 
   }
 
-  private void createTimeline() {
-    icon = new LogoIcon();
+  private void createTimeLine() {
+    LogoIcon icon = new LogoIcon();
     this.setIcon(icon);
 
-    timeline = new SwingRepaintTimeline(this);
-    timeline.addPropertyToInterpolate("alpha", 0, 45);
-    timeline.setDuration(800);
-    timeline.setEase(new Sine());
+    timeLine = new SwingRepaintTimeline(this);
+    timeLine.addPropertyToInterpolate("alpha", 0, 45);
+    timeLine.setDuration(800);
+    timeLine.setEase(new Sine());
   }
 
   class LogoIcon implements Icon {
 
-    private int size = 23;
-    private int inset = 2;
+    private final int size = 23;
+    private final int inset = 2;
 
     @Override
     public int getIconHeight() {
@@ -70,16 +69,16 @@ public class JAnimatedLogo extends JLabel {
     }
 
     @Override
-    public void paintIcon(Component c, Graphics g, int x, int y) {
-      paintConstants(c, g, x, y);
-      paintVary(c, g, x, y);
+    public void paintIcon(Component component, Graphics graphics, int x, int y) {
+      paintConstants(graphics, x, y);
+      paintVary(graphics);
     }
 
-    private void paintVary(Component c, Graphics g, int x, int y) {
-      Graphics2D g2 = (Graphics2D) g;
+    private void paintVary(Graphics graphics) {
+      Graphics2D g2 = (Graphics2D) graphics;
       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       Point upLeft = new Point((int) (Math.sqrt(size * size * 2) * Math.sin(Math.PI * (alpha - 45) / 180)),
-          (int) (-Math.sqrt(size * size * 2) * Math.cos(Math.PI * (alpha - 45) / 180)));
+        (int) (-Math.sqrt(size * size * 2) * Math.cos(Math.PI * (alpha - 45) / 180)));
       Point upRight = new Point((int) (size * Math.sin(Math.PI * alpha / 180)), (int) (-size * Math.cos(Math.PI * alpha / 180)));
       Point downLeft = new Point(-(int) (size * Math.cos(Math.PI * alpha / 180)), -(int) (size * Math.sin(Math.PI * alpha / 180)));
       Point downRight = new Point(0, 0);
@@ -90,10 +89,10 @@ public class JAnimatedLogo extends JLabel {
       move(upRight);
       move(downRight);
       move(downLeft);
-      g.setColor(Color.WHITE);
-      g.fillPolygon(new int[] { upLeft.x, upRight.x, downRight.x, downLeft.x }, new int[] { upLeft.y, upRight.y, downRight.y, downLeft.y }, 4);
-      g.setColor(Color.BLACK);
-      g.drawPolygon(new int[] { upLeft.x, upRight.x, downRight.x, downLeft.x }, new int[] { upLeft.y, upRight.y, downRight.y, downLeft.y }, 4);
+      graphics.setColor(Color.WHITE);
+      graphics.fillPolygon(new int[]{upLeft.x, upRight.x, downRight.x, downLeft.x}, new int[]{upLeft.y, upRight.y, downRight.y, downLeft.y}, 4);
+      graphics.setColor(Color.BLACK);
+      graphics.drawPolygon(new int[]{upLeft.x, upRight.x, downRight.x, downLeft.x}, new int[]{upLeft.y, upRight.y, downRight.y, downLeft.y}, 4);
     }
 
     private void move(Point p) {
@@ -101,9 +100,8 @@ public class JAnimatedLogo extends JLabel {
       p.y = p.y + 64 - inset - size - inset;
     }
 
-    private void paintConstants(Component c, Graphics g, int x, int y) {
-
-      // BOttom left
+    private void paintConstants(Graphics g, int x, int y) {
+      // Bottom left
       g.setColor(Color.BLACK);
       g.fillRect(inset, 64 - inset - size, size, size);
       g.setColor(Color.GREEN);
@@ -134,11 +132,11 @@ public class JAnimatedLogo extends JLabel {
   }
 
   public void start() {
-    timeline.playLoop(RepeatBehavior.REVERSE);
+    timeLine.playLoop(RepeatBehavior.REVERSE);
   }
 
   public void stop() {
-    timeline.cancelAtCycleBreak();
+    timeLine.cancelAtCycleBreak();
   }
 
 }

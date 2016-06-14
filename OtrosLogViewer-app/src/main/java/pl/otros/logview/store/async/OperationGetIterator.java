@@ -1,14 +1,13 @@
 package pl.otros.logview.store.async;
 
-import pl.otros.logview.LogData;
-import pl.otros.logview.Note;
-import pl.otros.logview.store.LogDataStore;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.LogDataStore;
 
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 
 class OperationGetIterator implements Callable<Iterator<LogData>> {
-  private LogDataStore logDataStore;
+  private final LogDataStore logDataStore;
 
   public OperationGetIterator(LogDataStore logDataStore) {
     this.logDataStore = logDataStore;
@@ -16,6 +15,6 @@ class OperationGetIterator implements Callable<Iterator<LogData>> {
 
   @Override
   public Iterator<LogData> call() {
-     return logDataStore.iterator();
+    return logDataStore.iterator();
   }
 }

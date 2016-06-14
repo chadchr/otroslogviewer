@@ -24,12 +24,12 @@ import java.util.*;
 /**
  * A helper class which converts infix expressions to postfix expressions Currently grouping is supported, as well as all of the Rules supported by
  * <code>RuleFactory</code>
- * <p/>
+ * <p>
  * Supports grouping via parens, mult-word operands using single or double quotes, and these operators:
- * <p/>
+ * <p>
  * ! NOT operator != NOT EQUALS operator == EQUALS operator ~= CASE-INSENSITIVE equals operator || OR operator && AND operator like REGEXP operator exists NOT
  * NULL operator &lt LESS THAN operator &gt GREATER THAN operator &lt= LESS THAN EQUALS operator &gt= GREATER THAN EQUALS operator
- * 
+ *
  * @author Scott Deboy (sdeboy@apache.org)
  * @author Krzysztof Otrebski
  */
@@ -39,11 +39,11 @@ public class InFixToPostFix {
   /**
    * Precedence map.
    */
-  private static final Map<String, Integer> precedenceMap = new HashMap<String, Integer>();
+  private static final Map<String, Integer> precedenceMap = new HashMap<>();
   /**
    * Operators.
    */
-  private static final List<String> operators = new Vector<String>();
+  private static final List<String> operators = new Vector<>();
 
   static {
     // order multi-char operators before single-char operators (will use this order during parsing)
@@ -79,9 +79,8 @@ public class InFixToPostFix {
 
   /**
    * Convert in-fix expression to post-fix.
-   * 
-   * @param expression
-   *          in-fix expression.
+   *
+   * @param expression in-fix expression.
    * @return post-fix expression.
    */
   public String convert(final String expression) {
@@ -90,9 +89,8 @@ public class InFixToPostFix {
 
   /**
    * Evaluates whether symbol is operand.
-   * 
-   * @param s
-   *          symbol.
+   *
+   * @param s symbol.
    * @return true if operand.
    */
   public static boolean isOperand(final String s) {
@@ -102,27 +100,25 @@ public class InFixToPostFix {
 
   /**
    * Determines whether one symbol precedes another.
-   * 
-   * @param s1
-   *          symbol 1
-   * @param s2
-   *          symbol 2
+   *
+   * @param symbol1 symbol 1
+   * @param symbol2 symbol 2
    * @return true if symbol 1 precedes symbol 2
    */
-  boolean precedes(final String s1, final String s2) {
-    String symbol1 = s1.toLowerCase(Locale.ENGLISH);
-    String symbol2 = s2.toLowerCase(Locale.ENGLISH);
+  private boolean precedes(final String symbol1, final String symbol2) {
+    String sym1 = symbol1.toLowerCase(Locale.ENGLISH);
+    String sym2 = symbol2.toLowerCase(Locale.ENGLISH);
 
-    if (!precedenceMap.keySet().contains(symbol1)) {
+    if (!precedenceMap.keySet().contains(sym1)) {
       return false;
     }
 
-    if (!precedenceMap.keySet().contains(symbol2)) {
+    if (!precedenceMap.keySet().contains(sym2)) {
       return false;
     }
 
-    int index1 = ((Integer) precedenceMap.get(symbol1)).intValue();
-    int index2 = ((Integer) precedenceMap.get(symbol2)).intValue();
+    int index1 = precedenceMap.get(sym1).intValue();
+    int index2 = precedenceMap.get(sym2).intValue();
 
     boolean precedesResult = (index1 < index2);
 
@@ -131,16 +127,15 @@ public class InFixToPostFix {
 
   /**
    * convert in-fix expression to post-fix.
-   * 
-   * @param tokenizer
-   *          tokenizer.
+   *
+   * @param tokenizer tokenizer.
    * @return post-fix expression.
    */
-  String infixToPostFix(final CustomTokenizer tokenizer) {
+  private String infixToPostFix(final CustomTokenizer tokenizer) {
     final String space = " ";
     StringBuffer postfix = new StringBuffer();
 
-    Stack<Object> stack = new Stack<Object>();
+    Stack<Object> stack = new Stack<>();
 
     while (tokenizer.hasMoreTokens()) {
       String token = tokenizer.nextToken();
@@ -212,7 +207,7 @@ public class InFixToPostFix {
 
   public static class CustomTokenizer {
 
-    private LinkedList<Object> linkedList = new LinkedList<Object>();
+    private final LinkedList<Object> linkedList = new LinkedList<>();
 
     public CustomTokenizer(String input) {
       parseInput(input, linkedList);
@@ -238,16 +233,14 @@ public class InFixToPostFix {
           pos = handleProperty(input, pos, linkedList);
         }
         boolean operatorFound = false;
-        for (Iterator<String> iter = operators.iterator(); iter.hasNext();) {
-          String operator = (String) iter.next();
+        for (String operator : operators) {
           if (nextValueIs(input, pos, operator)) {
             operatorFound = true;
             pos = handle(pos, linkedList, operator);
           }
         }
         boolean keywordFound = false;
-        for (Iterator<String> iter = keywords.iterator(); iter.hasNext();) {
-          String keyword = (String) iter.next();
+        for (String keyword : keywords) {
           if (nextValueIs(input, pos, keyword)) {
             keywordFound = true;
             pos = handle(pos, linkedList, keyword);
@@ -272,13 +265,13 @@ public class InFixToPostFix {
       return (input.length() >= (pos + value.length())) && (input.substring(pos, pos + value.length()).equalsIgnoreCase(value));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private int handle(int pos, LinkedList linkedList, String value) {
       linkedList.add(value);
       return pos + value.length();
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private int handleQuotedString(String input, int pos, LinkedList linkedList) {
       String quoteChar = input.substring(pos, pos + 1);
       int nextSingleQuotePos = input.indexOf(quoteChar, pos + 1);
@@ -290,7 +283,7 @@ public class InFixToPostFix {
       return nextSingleQuotePos + 1;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private int handleText(String input, int pos, LinkedList linkedList) {
       StringBuilder text = new StringBuilder("");
       int newPos = pos;
@@ -307,8 +300,7 @@ public class InFixToPostFix {
           linkedList.add(text);
           return newPos;
         }
-        for (Iterator iter = operators.iterator(); iter.hasNext();) {
-          String operator = (String) iter.next();
+        for (String operator : operators) {
           if (nextValueIs(input, newPos, operator)) {
             linkedList.add(text);
             return newPos;
@@ -323,7 +315,7 @@ public class InFixToPostFix {
       return newPos;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private int handleProperty(String input, int pos, LinkedList linkedList) {
       int propertyPos = pos + "PROP.".length();
       StringBuffer propertyName = new StringBuffer("PROP.");
@@ -340,8 +332,7 @@ public class InFixToPostFix {
           linkedList.add(propertyName);
           return propertyPos;
         }
-        for (Iterator iter = operators.iterator(); iter.hasNext();) {
-          String operator = (String) iter.next();
+        for (String operator : operators) {
           if (nextValueIs(input, propertyPos, operator)) {
             linkedList.add(propertyName);
             return propertyPos;

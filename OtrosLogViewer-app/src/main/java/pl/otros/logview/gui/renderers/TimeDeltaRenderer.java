@@ -1,6 +1,6 @@
 package pl.otros.logview.gui.renderers;
 
-import pl.otros.logview.gui.TimeDelta;
+import pl.otros.logview.api.model.TimeDelta;
 
 import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
@@ -14,10 +14,10 @@ public class TimeDeltaRenderer implements TableCellRenderer {
   public static final int HOUR = 60 * MINUTE;
 
   private Date selectedTimestamp;
-  private JLabel label;
+  private final JLabel label;
 
   public TimeDeltaRenderer() {
-    label  = new JLabel();
+    label = new JLabel();
     label.setOpaque(true);
     label.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -40,7 +40,7 @@ public class TimeDeltaRenderer implements TableCellRenderer {
    * @param deltaInMillis duration in milliseconds
    * @return time duration in descriptive form
    */
-  String formatDelta(long deltaInMillis) {
+  protected String formatDelta(long deltaInMillis) {
     StringBuilder sb = new StringBuilder();
     if (deltaInMillis < 0) {
       sb.append("-");

@@ -1,13 +1,13 @@
 package pl.otros.logview.store.async;
 
-import pl.otros.logview.MarkerColors;
-import pl.otros.logview.store.LogDataStore;
+import pl.otros.logview.api.model.LogDataStore;
+import pl.otros.logview.api.model.MarkerColors;
 
 import java.util.concurrent.Callable;
 
 class OperationGetMarkerColors implements Callable<MarkerColors> {
-  private LogDataStore logDataStore;
-  private int row;
+  private final LogDataStore logDataStore;
+  private final int row;
 
   public OperationGetMarkerColors(LogDataStore logDataStore, int row) {
     this.logDataStore = logDataStore;
@@ -16,6 +16,6 @@ class OperationGetMarkerColors implements Callable<MarkerColors> {
 
   @Override
   public MarkerColors call() {
-     return logDataStore.getMarkerColors(row);
+    return logDataStore.getMarkerColors(row);
   }
 }

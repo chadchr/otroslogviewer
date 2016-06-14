@@ -17,13 +17,13 @@
 
 package pl.otros.logview.accept.query.org.apache.log4j.rule;
 
-import pl.otros.logview.LogData;
+import pl.otros.logview.api.model.LogData;
 
 import java.util.*;
 
 /**
  * A Rule class implementing logical not.
- * 
+ *
  * @author Scott Deboy (sdeboy@apache.org)
  * @author Krzysztof Otrebski
  */
@@ -32,7 +32,7 @@ public class NotRule extends AbstractRule {
   /**
    * Serialization ID.
    */
-  static final long serialVersionUID = -6827159473117969306L;
+  private static final long serialVersionUID = -6827159473117969306L;
   /**
    * Enclosed rule.
    */
@@ -40,9 +40,8 @@ public class NotRule extends AbstractRule {
 
   /**
    * Create new instance.
-   * 
-   * @param rule
-   *          enclosed rule.
+   *
+   * @param rule enclosed rule.
    */
   private NotRule(final Rule rule) {
     super();
@@ -51,9 +50,8 @@ public class NotRule extends AbstractRule {
 
   /**
    * Create new instance.
-   * 
-   * @param rule
-   *          enclosed rule.
+   *
+   * @param rule enclosed rule.
    * @return new rule.
    */
   public static Rule getRule(final Rule rule) {
@@ -62,9 +60,8 @@ public class NotRule extends AbstractRule {
 
   /**
    * Create new instance from top element of stack.
-   * 
-   * @param stack
-   *          stack
+   *
+   * @param stack stack
    * @return new rule.
    */
   public static Rule getRule(final Stack<Object> stack) {
@@ -82,7 +79,7 @@ public class NotRule extends AbstractRule {
   /**
    * {@inheritDoc}
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public boolean evaluate(final LogData event, Map matches) {
     if (matches == null) {
       return !(rule.evaluate(event, null));
@@ -90,8 +87,8 @@ public class NotRule extends AbstractRule {
     Map tempMatches = new HashMap();
     boolean result = !(rule.evaluate(event, tempMatches));
     if (result) {
-      for (Iterator iter = tempMatches.entrySet().iterator(); iter.hasNext();) {
-        Map.Entry entry = (Map.Entry) iter.next();
+      for (Object o : tempMatches.entrySet()) {
+        Map.Entry entry = (Map.Entry) o;
         Object key = entry.getKey();
         Set value = (Set) entry.getValue();
         Set mainSet = (Set) matches.get(key);

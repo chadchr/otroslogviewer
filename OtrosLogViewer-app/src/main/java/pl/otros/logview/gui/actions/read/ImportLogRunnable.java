@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,26 +16,25 @@
 package pl.otros.logview.gui.actions.read;
 
 import org.apache.commons.vfs2.FileObject;
-import pl.otros.logview.gui.LogDataTableModel;
-import pl.otros.logview.gui.LogImportStats;
-import pl.otros.logview.gui.LogViewPanelWrapper;
-import pl.otros.logview.importer.LogImporter;
-import pl.otros.logview.io.LoadingInfo;
-import pl.otros.logview.io.Utils;
-import pl.otros.logview.parser.ParsingContext;
-import pl.otros.logview.store.LogDataStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.gui.LogDataTableModel;
+import pl.otros.logview.api.gui.LogViewPanelWrapper;
+import pl.otros.logview.api.importer.LogImporter;
+import pl.otros.logview.api.io.LoadingInfo;
+import pl.otros.logview.api.io.Utils;
+import pl.otros.logview.api.model.LogDataStore;
+import pl.otros.logview.api.parser.ParsingContext;
 
 import javax.swing.*;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 public final class ImportLogRunnable implements Runnable {
 
-  private static final Logger LOGGER = Logger.getLogger(ImportLogRunnable.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(ImportLogRunnable.class.getName());
   private final LoadingInfo openFileObject;
   private final LogViewPanelWrapper panel;
   private final FileObject file;
-  private LogImporter importer;
+  private final LogImporter importer;
 
   public ImportLogRunnable(LoadingInfo openFileObject, LogViewPanelWrapper panel, FileObject file, LogImporter importer) {
     this.openFileObject = openFileObject;
@@ -49,29 +48,18 @@ public final class ImportLogRunnable implements Runnable {
     ParsingContext parsingContext = new ParsingContext(file.getName().getFriendlyURI(), file.getName().getBaseName());
     final LogDataTableModel dataTableModel = panel.getDataTableModel();
     final LogDataStore logDataStore = dataTableModel.getLogDataStore();
-    LogImportStats importStats = new LogImportStats(file.getName().getFriendlyURI());
-    panel.getStatsTable().setModel(importStats);
-    ProgressWatcher watcher = new ProgressWatcher(openFileObject.getObserableInputStreamImpl(), panel, file, importStats);
-    Thread t = new Thread(watcher, "Log loader: " + file.getName().toString());
-    t.setDaemon(true);
-    t.start();
     panel.addHierarchyListener(new ReadingStopperForRemove(openFileObject.getObserableInputStreamImpl()));
     importer.initParsingContext(parsingContext);
     try {
       importer.importLogs(openFileObject.getContentInputStream(), logDataStore, parsingContext);
       LOGGER.info("File " + file.getName().getFriendlyURI() + " loaded");
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Error when importing log", e);
+      LOGGER.error("Error when importing log", e);
     }
-    SwingUtilities.invokeLater(new Runnable() {
-
-      @Override
-      public void run() {
-        dataTableModel.fireTableDataChanged();
-        panel.switchToContentView();
-      }
+    SwingUtilities.invokeLater(() -> {
+      dataTableModel.fireTableDataChanged();
+      panel.switchToContentView();
     });
-    watcher.updateFinish("Loaded");
     Utils.closeQuietly(openFileObject.getFileObject());
   }
 }

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,19 +16,19 @@
 package pl.otros.logview.gui.actions.search;
 
 import org.apache.commons.lang.StringUtils;
-import pl.otros.logview.LogData;
+import pl.otros.logview.api.model.LogData;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
  * Matches if LogData message contains string (case insensitive)
- * 
- * 
+ *
+ *
  */
 public class StringContainsSearchMatcher implements SearchMatcher {
 
-  private String searchChar;
+  private final String searchChar;
 
   public StringContainsSearchMatcher(String searchChar) {
     this.searchChar = searchChar.toLowerCase();
@@ -41,7 +41,7 @@ public class StringContainsSearchMatcher implements SearchMatcher {
 
   @Override
   public ArrayList<String> getFoundTextFragments(LogData logData) {
-    HashSet<String> result = new HashSet<String>();
+    HashSet<String> result = new HashSet<>();
     String message = logData.getMessage();
     String messageLc = message.toLowerCase();
     int idx = 0;
@@ -50,7 +50,7 @@ public class StringContainsSearchMatcher implements SearchMatcher {
       idx++;
     }
 
-    return new ArrayList<String>(result);
+    return new ArrayList<>(result);
   }
 
 }

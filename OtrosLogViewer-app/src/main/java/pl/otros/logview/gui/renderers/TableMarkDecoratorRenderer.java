@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,20 +15,20 @@
  ******************************************************************************/
 package pl.otros.logview.gui.renderers;
 
-import pl.otros.logview.MarkerColors;
-import pl.otros.logview.gui.MarkableTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.gui.MarkableTableModel;
+import pl.otros.logview.api.model.MarkerColors;
 
 import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import java.awt.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class TableMarkDecoratorRenderer implements TableCellRenderer {
 
-  private static final Logger LOGGER = Logger.getLogger(TableMarkDecoratorRenderer.class.getName());
-  private TableCellRenderer subjectRenderer;
+  private static final Logger LOGGER = LoggerFactory.getLogger(TableMarkDecoratorRenderer.class.getName());
+  private final TableCellRenderer subjectRenderer;
 
 
   public TableMarkDecoratorRenderer(TableCellRenderer subjectRenderer) {
@@ -46,13 +46,13 @@ public class TableMarkDecoratorRenderer implements TableCellRenderer {
       MarkableTableModel markedModel = (MarkableTableModel) model;
       try {
         int converterRow = table.convertRowIndexToModel(row);
-        LOGGER.finest(String.format("Checking if row %d [model %d] is marked.",row, converterRow));
+        LOGGER.trace(String.format("Checking if row %d [model %d] is marked.", row, converterRow));
         marked = markedModel.isMarked(converterRow);
-        LOGGER.finest(String.format("Row %d is marked: %s",row,marked));
+        LOGGER.trace(String.format("Row %d is marked: %s", row, marked));
         markerColors = markedModel.getMarkerColors(converterRow);
-        LOGGER.finest(String.format("Color of row %d is %s",row,markerColors));
+        LOGGER.trace(String.format("Color of row %d is %s", row, markerColors));
       } catch (NullPointerException e) {
-        LOGGER.log(Level.SEVERE, "TableMarkDecoratorRenderer.getTableCellRendererComponent() null pointer caught at index " + row, e);
+        LOGGER.error("TableMarkDecoratorRenderer.getTableCellRendererComponent() null pointer caught at index " + row, e);
       }
     }
 

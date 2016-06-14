@@ -1,19 +1,16 @@
 package pl.otros.logview.gui.message.stacktracecode;
 
 import com.google.common.base.Splitter;
-import org.apache.commons.lang.StringUtils;
-import pl.otros.logview.gui.message.LocationInfo;
-import pl.otros.logview.gui.message.MessageFormatter;
-import pl.otros.logview.gui.services.jumptocode.JumpToCodeService;
+import pl.otros.logview.api.model.LocationInfo;
+import pl.otros.logview.api.pluginable.MessageFormatter;
+import pl.otros.logview.api.services.JumpToCodeService;
 import pl.otros.logview.pluginable.AbstractPluginableElement;
 
-import java.io.IOException;
-import java.util.logging.Logger;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class StackTraceFormatter extends AbstractPluginableElement implements MessageFormatter {
 
-  private static final Logger LOGGER = Logger.getLogger(StackTraceFormatter.class.getName());
   public static final String STACK_TRACE_REGEX = "(\\s*at\\s+([\\w\\d\\.]*)\\.([\\w\\d\\$]+)\\.([\\d\\w<>\\$]+)\\(([\\d\\w\\.\\u0020:]+)\\))";
   private final JumpToCodeService jumpToCodeService;
 
@@ -38,7 +35,7 @@ public class StackTraceFormatter extends AbstractPluginableElement implements Me
     StringBuilder sb = new StringBuilder(message.length());
     final Iterable<String> split = Splitter.on("\n").split(message);
     for (String line : split) {
-      sb.append(line);
+      sb.append(line.replaceFirst("\\s+at", "  at"));
       if (Pattern.compile(STACK_TRACE_REGEX).matcher(line).find()) {
         addCodeToLine(sb, line);
       }
@@ -48,20 +45,28 @@ public class StackTraceFormatter extends AbstractPluginableElement implements Me
   }
 
   private void addCodeToLine(StringBuilder sb, String line) {
-    final LocationInfo location = LocationInfo.parse(line);
-    if (location != null) {
-      try {
-        String content = jumpToCodeService.getContent(location).replaceAll("\r", "");
-        if (StringUtils.isNotBlank(content)) {
-          final String begin = "\n" + location.getLineNumber() + ":";
-          content = content.substring(content.indexOf(begin) + begin.length());
-          content = content.split("\n", 2)[0];
-          sb.append("\t //").append(content.trim());
-        }
-      } catch (IOException e) {
-        //ignore. if code fragment cant be loaded, just don't display it
-      }
+    final Optional<LocationInfo> location = Optional
+      .ofNullable(line)
+      .map(LocationInfo::parse);
+
+    final Optional<String> content = location
+      .flatMap(jumpToCodeService::getContentOptional)
+      .map(s -> s.replaceAll("\r", ""));
+
+    if (content.isPresent()) {
+      final String finalContent = content.get();
+      location
+        .flatMap(LocationInfo::getLineNumber)
+        .flatMap(ln ->
+          Splitter.on('\n').splitToList(finalContent)
+            .stream()
+            .filter(t -> t.startsWith(Integer.toString(ln)))
+            .map(s -> "\t //" + s.replaceFirst("[\\d\\s]+:\\s*", " ").trim())
+            .findFirst()
+        ).ifPresent(sb::append);
+
     }
+
   }
 
 }

@@ -16,19 +16,17 @@
 
 package pl.otros.logview.pluginsimpl;
 
+import pl.otros.logview.api.OtrosApplication;
 import pl.otros.logview.api.plugins.LogOpenHandler;
 import pl.otros.logview.api.plugins.MenuActionProvider;
 import pl.otros.logview.api.plugins.PluginContext;
-import pl.otros.logview.gui.OtrosApplication;
 
 import javax.swing.*;
-import java.util.logging.Logger;
 
 public class PluginContextImpl implements PluginContext {
-  private static final Logger LOGGER = Logger.getLogger(PluginContextImpl.class.getName());
 
-  private OtrosApplication application;
-  private LogOpenHandler logOpenHandler;
+  private final OtrosApplication application;
+  private final LogOpenHandler logOpenHandler;
 
 
   public PluginContextImpl(OtrosApplication application) {

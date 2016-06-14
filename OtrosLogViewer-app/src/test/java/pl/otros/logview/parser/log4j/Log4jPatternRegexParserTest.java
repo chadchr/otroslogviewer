@@ -15,14 +15,13 @@
  ******************************************************************************/
 package pl.otros.logview.parser.log4j;
 
-import static org.testng.AssertJUnit.assertEquals;
-import org.testng.annotations.Test;
 import org.apache.commons.io.IOUtils;
-import pl.otros.logview.LogData;
-import pl.otros.logview.importer.InitializationException;
-import pl.otros.logview.importer.LogImporterUsingParser;
-import pl.otros.logview.parser.ParsingContext;
-import pl.otros.logview.reader.ProxyLogDataCollector;
+import org.testng.annotations.Test;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.InitializationException;
+import pl.otros.logview.api.importer.LogImporterUsingParser;
+import pl.otros.logview.api.parser.ParsingContext;
+import pl.otros.logview.api.reader.ProxyLogDataCollector;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,6 +30,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 import java.util.logging.Level;
+
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * This class tests the "rePattern" alternative of Log4jPatternMultilineLogParser.

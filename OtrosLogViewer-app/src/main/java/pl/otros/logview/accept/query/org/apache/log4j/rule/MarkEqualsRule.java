@@ -18,9 +18,9 @@
 package pl.otros.logview.accept.query.org.apache.log4j.rule;
 
 import org.apache.commons.lang.StringUtils;
-import pl.otros.logview.LogData;
-import pl.otros.logview.MarkerColors;
 import pl.otros.logview.accept.query.org.apache.log4j.spi.LoggingEventFieldResolver;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.MarkerColors;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -29,7 +29,7 @@ import java.util.Set;
 
 /**
  * A Rule class implementing equality evaluation for timestamps.
- * 
+ *
  * @author Scott Deboy (sdeboy@apache.org)
  * @author Krzysztof Otrebski
  */
@@ -38,7 +38,7 @@ public class MarkEqualsRule extends AbstractRule {
   /**
    * Serialization ID.
    */
-  static final long serialVersionUID = 1639079557187790321L;
+  private static final long serialVersionUID = 1639079557187790321L;
   /**
    * Resolver.
    */
@@ -50,25 +50,19 @@ public class MarkEqualsRule extends AbstractRule {
   private boolean useOnOffSwith = false;
   private MarkerColors markerColors;
   private boolean marked;
-  private final boolean negation;
 
   /**
    * Create new instance.
-   * 
-   * @param value
-   *          string representation of marker colors or true/false.
+   *
+   * @param value string representation of marker colors or true/false.
    */
-  private MarkEqualsRule(final String value, final boolean negation) {
+  private MarkEqualsRule(final String value) {
     super();
-    this.negation = negation;
     if (StringUtils.equalsIgnoreCase(value, "true") || StringUtils.equalsIgnoreCase(value, "false")) {
-      marked = Boolean.valueOf(value).booleanValue();
+      marked = Boolean.valueOf(value);
       useOnOffSwith = true;
     } else {
-      // expects value to be a timestamp value represented as a long
-
       try {
-
         markerColors = MarkerColors.valueOf(value);
       } catch (Exception pe) {
         for (MarkerColors mc : MarkerColors.values()) {
@@ -84,24 +78,23 @@ public class MarkEqualsRule extends AbstractRule {
 
   /**
    * Create new instance.
-   * 
-   * @param value
-   *          string representation of marker colors or true/false.
+   *
+   * @param value string representation of marker colors or true/false.
    * @return new instance
    */
-  public static Rule getRule(final String value, final boolean negation) {
-    return new MarkEqualsRule(value, negation);
+  public static Rule getRule(final String value) {
+    return new MarkEqualsRule(value);
   }
 
   /**
    * {@inheritDoc}
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public boolean evaluate(final LogData event, Map matches) {
     String eventMarkString = RESOLVER.getValue(LoggingEventFieldResolver.MARK_FIELD, event).toString();
-    boolean result = false;
+    boolean result;
     if (useOnOffSwith) {
-      result = !(marked ^ event.isMarked());
+      result = marked == event.isMarked();
     } else {
       result = event.getMarkerColors() != null && event.getMarkerColors().equals(markerColors);
     }
@@ -119,13 +112,10 @@ public class MarkEqualsRule extends AbstractRule {
 
   /**
    * Deserialize the state of the object.
-   * 
-   * @param in
-   *          object input stream
-   * @throws IOException
-   *           if IO error during deserialization
-   * @throws ClassNotFoundException
-   *           if class not found during deserialization
+   *
+   * @param in object input stream
+   * @throws IOException            if IO error during deserialization
+   * @throws ClassNotFoundException if class not found during deserialization
    */
   private void readObject(final java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     useOnOffSwith = in.readBoolean();
@@ -134,11 +124,9 @@ public class MarkEqualsRule extends AbstractRule {
 
   /**
    * Serialize the state of the object.
-   * 
-   * @param out
-   *          object output stream
-   * @throws IOException
-   *           if IO error during serialization
+   *
+   * @param out object output stream
+   * @throws IOException if IO error during serialization
    */
   private void writeObject(final java.io.ObjectOutputStream out) throws IOException {
     out.writeBoolean(useOnOffSwith);

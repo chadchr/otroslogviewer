@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,25 +15,27 @@
  ******************************************************************************/
 package pl.otros.logview.reader;
 
-import pl.otros.logview.LogDataCollector;
-import pl.otros.logview.gui.StatusObserver;
-import pl.otros.logview.importer.LogImporter;
-import pl.otros.logview.parser.ParsingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.StatusObserver;
+import pl.otros.logview.api.importer.LogImporter;
+import pl.otros.logview.api.model.LogDataCollector;
+import pl.otros.logview.api.parser.ParsingContext;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Logger;
 
 public class SocketLogReader {
 
-  private static final Logger LOGGER = Logger.getLogger(SocketLogReader.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(SocketLogReader.class.getName());
   private ServerSocket serverSocket;
-  private StatusObserver observer;
+  private final StatusObserver observer;
   private final LogDataCollector logDataCollector;
   private final LogImporter logImporter;
-  private int port;
+  private final int port;
 
   public SocketLogReader(LogImporter logImporter, LogDataCollector logDataCollector, StatusObserver observer, int port) {
     super();
@@ -51,25 +53,21 @@ public class SocketLogReader {
   }
 
   public void start() throws Exception {
-    serverSocket = new ServerSocket(port);
-    Runnable r = new Runnable() {
-
-      @Override
-      public void run() {
-        try {
-          while (true) {
-            Socket s = serverSocket.accept();
-            SocketHandler handler = new SocketHandler(s);
-            Thread t = new Thread(handler, "Socket handler: " + s.getInetAddress() + ":" + s.getPort());
-            t.setDaemon(true);
-            t.start();
-          }
-        } catch (IOException e) {
-          if (isClosed()) {
-            LOGGER.info("Listening on socket closed.");
-          } else {
-            LOGGER.warning("Problem with listening on socket: " + e.getMessage());
-          }
+    serverSocket = new ServerSocket(port,50,InetAddress.getByAddress(new byte[]{0,0,0,0}));
+    Runnable r = () -> {
+      try {
+        while (true) {
+          Socket s = serverSocket.accept();
+          SocketHandler handler = new SocketHandler(s);
+          Thread t = new Thread(handler, "Socket handler: " + s.getInetAddress() + ":" + s.getPort());
+          t.setDaemon(true);
+          t.start();
+        }
+      } catch (IOException e) {
+        if (isClosed()) {
+          LOGGER.info("Listening on socket closed.");
+        } else {
+          LOGGER.warn("Problem with listening on socket: " + e.getMessage());
         }
       }
     };

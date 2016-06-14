@@ -17,18 +17,19 @@
 
 package pl.otros.logview.accept.query.org.apache.log4j.rule;
 
-import pl.otros.logview.LogData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.otros.logview.accept.query.org.apache.log4j.spi.LoggingEventFieldResolver;
+import pl.otros.logview.api.model.LogData;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * A Rule class implementing equality evaluation for timestamps.
- * 
+ *
  * @author Scott Deboy (sdeboy@apache.org)
  * @author Krzysztof Otrebski
  */
@@ -39,11 +40,11 @@ public class TimestampEqualsRule extends AbstractRule {
   private static final long HOUR = 60 * MINUTE;
   private static final long DAY = 24 * HOUR;
 
-  private static final Logger LOGGER = Logger.getLogger(TimestampEqualsRule.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(TimestampEqualsRule.class.getName());
   /**
    * Serialization ID.
    */
-  static final long serialVersionUID = 1639079557187790321L;
+  private static final long serialVersionUID = 1639079557187790321L;
   /**
    * Resolver.
    */
@@ -51,37 +52,37 @@ public class TimestampEqualsRule extends AbstractRule {
   /**
    * Date format.
    */
-  private static final SimpleDateFormat[] DATE_FORMATS = new SimpleDateFormat[] {//
-  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),//
-      new SimpleDateFormat("yyyy-MM-dd HH:mm"),//
-      new SimpleDateFormat("yyyy-MM-dd HH"),//
-      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),//
-      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm"),//
-      new SimpleDateFormat("yyyy-MM-dd'T'HH"),//
-      new SimpleDateFormat("yyyy-MM-dd"),//
+  private static final SimpleDateFormat[] DATE_FORMATS = {//
+    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),//
+    new SimpleDateFormat("yyyy-MM-dd HH:mm"),//
+    new SimpleDateFormat("yyyy-MM-dd HH"),//
+    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),//
+    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm"),//
+    new SimpleDateFormat("yyyy-MM-dd'T'HH"),//
+    new SimpleDateFormat("yyyy-MM-dd"),//
 
   };
 
-  private static final long[] DATE_DURATIONS = new long[] {//
-  SECOND,//
-      MINUTE,//
-      HOUR,//
-      SECOND,//
-      MINUTE,//
-      HOUR,//
-      DAY,//
+  private static final long[] DATE_DURATIONS = {//
+    SECOND,//
+    MINUTE,//
+    HOUR,//
+    SECOND,//
+    MINUTE,//
+    HOUR,//
+    DAY,//
   };
   /**
    * Time format.
    */
-  private static final SimpleDateFormat[] TIME_FORMATS = new SimpleDateFormat[] {//
-  new SimpleDateFormat("HH:mm:ss"),//
-      new SimpleDateFormat("HH:mm"), //
+  private static final SimpleDateFormat[] TIME_FORMATS = {//
+    new SimpleDateFormat("HH:mm:ss"),//
+    new SimpleDateFormat("HH:mm"), //
   };
 
-  private static final long[] TIME_DURATIONS = new long[] {//
-  SECOND,//
-      MINUTE,//
+  private static final long[] TIME_DURATIONS = {//
+    SECOND,//
+    MINUTE,//
   };
 
   /**
@@ -92,9 +93,8 @@ public class TimestampEqualsRule extends AbstractRule {
 
   /**
    * Create new instance.
-   * 
-   * @param value
-   *          string representation of date.
+   *
+   * @param value string representation of date.
    */
   private TimestampEqualsRule(final String value) {
     super();
@@ -106,7 +106,7 @@ public class TimestampEqualsRule extends AbstractRule {
         Date parse = df.parse(value);
         timeStamp = parse.getTime();
         dateFormatFound = true;
-        LOGGER.fine(String.format("Date format for %s detected: %s with duration %dms", value, df.toPattern(), duration));
+        LOGGER.debug(String.format("Date format for %s detected: %s with duration %dms", value, df.toPattern(), duration));
         break;
       } catch (ParseException pe) {
         // check next log format
@@ -127,7 +127,7 @@ public class TimestampEqualsRule extends AbstractRule {
           todayCal.set(Calendar.SECOND, calendar.get(Calendar.SECOND));
           todayCal.set(Calendar.MILLISECOND, calendar.get(Calendar.MILLISECOND));
           timeStamp = todayCal.getTimeInMillis();
-          LOGGER.fine(String.format("Date format for %s detected: %s with duration %dms", value, df.toPattern(), duration));
+          LOGGER.debug(String.format("Date format for %s detected: %s with duration %dms", value, df.toPattern(), duration));
           dateFormatFound = true;
           break;
         } catch (ParseException pe) {
@@ -137,16 +137,15 @@ public class TimestampEqualsRule extends AbstractRule {
     }
 
     if (!dateFormatFound) {
-      LOGGER.fine(String.format("Date format for %s is not found", value));
+      LOGGER.debug(String.format("Date format for %s is not found", value));
       throw new IllegalArgumentException("Could not parse date: " + value);
     }
   }
 
   /**
    * Create new instance.
-   * 
-   * @param value
-   *          string representation of date.
+   *
+   * @param value string representation of date.
    * @return new instance
    */
   public static Rule getRule(final String value) {
@@ -156,7 +155,7 @@ public class TimestampEqualsRule extends AbstractRule {
   /**
    * {@inheritDoc}
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public boolean evaluate(final LogData event, Map matches) {
     String eventTimeStampString = RESOLVER.getValue(LoggingEventFieldResolver.TIMESTAMP_FIELD, event).toString();
     long eventTimeStamp = Long.parseLong(eventTimeStampString) / 1000 * 1000;
@@ -174,13 +173,10 @@ public class TimestampEqualsRule extends AbstractRule {
 
   /**
    * Deserialize the state of the object.
-   * 
-   * @param in
-   *          object input stream
-   * @throws IOException
-   *           if IO error during deserialization
-   * @throws ClassNotFoundException
-   *           if class not found during deserialization
+   *
+   * @param in object input stream
+   * @throws IOException            if IO error during deserialization
+   * @throws ClassNotFoundException if class not found during deserialization
    */
   private void readObject(final java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     timeStamp = in.readLong();
@@ -189,11 +185,9 @@ public class TimestampEqualsRule extends AbstractRule {
 
   /**
    * Serialize the state of the object.
-   * 
-   * @param out
-   *          object output stream
-   * @throws IOException
-   *           if IO error during serialization
+   *
+   * @param out object output stream
+   * @throws IOException if IO error during serialization
    */
   private void writeObject(final java.io.ObjectOutputStream out) throws IOException {
     out.writeLong(timeStamp);

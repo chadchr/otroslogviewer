@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,26 +16,27 @@
 package pl.otros.logview.loader;
 
 import org.apache.commons.io.IOUtils;
-import pl.otros.logview.gui.message.MessageColorizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.BaseLoader;
+import pl.otros.logview.api.pluginable.MessageColorizer;
 import pl.otros.logview.gui.message.SearchResultColorizer;
 import pl.otros.logview.gui.message.SoapMessageColorizer;
 import pl.otros.logview.gui.message.StackTraceColorizer;
 import pl.otros.logview.gui.message.pattern.PropertyPatternMessageColorizer;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Logger;
 
 public class MessageColorizerLoader {
 
-  private static final Logger LOGGER = Logger.getLogger(MessageColorizerLoader.class.getName());
-  private BaseLoader baseLoader = new BaseLoader();
+  private static final Logger LOGGER = LoggerFactory.getLogger(MessageColorizerLoader.class.getName());
+  private final BaseLoader baseLoader = new BaseLoader();
 
   public ArrayList<MessageColorizer> loadInternal() {
-    ArrayList<MessageColorizer> list = new ArrayList<MessageColorizer>();
+    ArrayList<MessageColorizer> list = new ArrayList<>();
     list.add(new SearchResultColorizer());
     list.add(new StackTraceColorizer());
     list.add(new SoapMessageColorizer());
@@ -49,15 +50,8 @@ public class MessageColorizerLoader {
   }
 
   public ArrayList<MessageColorizer> loadFromProperies(File dir) {
-    ArrayList<MessageColorizer> list = new ArrayList<MessageColorizer>();
-    File[] listFiles = dir.listFiles(new FileFilter() {
-
-      @Override
-      public boolean accept(File pathname) {
-        return (pathname.isFile() && pathname.getName().endsWith("pattern"));
-      }
-
-    });
+    ArrayList<MessageColorizer> list = new ArrayList<>();
+    File[] listFiles = dir.listFiles(pathname -> (pathname.isFile() && pathname.getName().endsWith("pattern")));
     if (listFiles != null) {
       for (File file : listFiles) {
         FileInputStream in = null;
@@ -68,7 +62,7 @@ public class MessageColorizerLoader {
           colorizer.setFile(file.getAbsolutePath());
           list.add(colorizer);
         } catch (Exception e) {
-          LOGGER.severe(String.format("Can't load property file based message colorizer from file %s : %s", file.getName(), e.getMessage()));
+          LOGGER.error(String.format("Can't load property file based message colorizer from file %s : %s", file.getName(), e.getMessage()));
           e.printStackTrace();
         } finally {
           IOUtils.closeQuietly(in);

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +16,8 @@
 package pl.otros.logview.accept;
 
 import org.testng.annotations.BeforeMethod;
-import pl.otros.logview.LogData;
-import pl.otros.logview.gui.LogDataTableModel;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.gui.LogDataTableModel;
 
 import javax.swing.*;
 
@@ -25,14 +25,10 @@ public class SelectionAwareAcceptConditionTestBase {
 
   protected JTable table;
   protected LogDataTableModel dataTableModel;
-  protected String[] classes = new String[] { "a.a.A", "a.a.B", "a.b.A" };
-
-  public SelectionAwareAcceptConditionTestBase() {
-    super();
-  }
+  protected String[] classes = {"a.a.A", "a.a.B", "a.b.A"};
 
   @BeforeMethod
-public void setup() {
+  public void setUp() {
     dataTableModel = new LogDataTableModel();
     table = new JTable(dataTableModel);
     for (int i = 0; i < 5; i++) {

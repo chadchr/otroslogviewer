@@ -1,11 +1,14 @@
 # OtrosLogViewer
 Useful software for analysing applications logs and traces.
 
+![Build status](https://api.travis-ci.org/otros-systems/otroslogviewer.svg)
+
 ## Requirements
-  * Java 6
+  * Java 8 since version 1.4.0
+  * Java 6 for verions 1.3.x
 
 ## Download 
-  * You can download latest version from [Sourceforge page](https://sourceforge.net/projects/otroslogviewer/files/latest/download?source=directory)
+  * You can download latest version from [Sourceforge page](https://sourceforge.net/projects/otroslogviewer/files/latest/download?source=directory) [![Download OtrosLogViewer](https://img.shields.io/sourceforge/dd/otroslogviewer.svg)](https://sourceforge.net/projects/otroslogviewer/files/latest/download)
 
 ## Features
   * Loading logs from remote servers using ftp, sftp, ssh, samba and others ([supported file systems](http://commons.apache.org/vfs/filesystems.html))
@@ -24,12 +27,14 @@ Useful software for analysing applications logs and traces.
   * Adding notes to log event
   * Saving/loading log investigation (with added marks and notes)
   * Integration with [IntelliJ IDEA](https://github.com/otros-systems/otroslogviewer/wiki/JumpToCode) and [Eclipse](https://github.com/otros-systems/otroslogviewer/wiki/JumpToCode)
+  * Integration with stackoverflow.com
 
 
 ## Included parsers
   * Java Util Logging XMLFormatter
   * Java Util Logging SimpleFormatter
   * log4j pattern layout [(how to create your own)](https://github.com/otros-systems/otroslogviewer/wiki/Log4jPatternLayout)
+  * [JSON format](https://github.com/otros-systems/otroslogviewer/wiki/Parsing-logs-in-JSON-format)
   * log4j XMLLayout
 
 ## Included filters

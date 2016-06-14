@@ -2,7 +2,7 @@ package pl.otros.logview.gui.config;
 
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.configuration.Configuration;
-import pl.otros.logview.gui.ConfKeys;
+import pl.otros.logview.api.ConfKeys;
 import pl.otros.swing.config.AbstractConfigView;
 import pl.otros.swing.config.InMainConfig;
 import pl.otros.swing.config.ValidationResult;
@@ -11,7 +11,7 @@ import javax.swing.*;
 
 public class VersionCheckConfigView extends AbstractConfigView implements InMainConfig {
   private final JCheckBox checkCombo;
-  private JPanel panel;
+  private final JPanel panel;
 
   public VersionCheckConfigView() {
     super("versionCheck", "Version check", "Check for new version");

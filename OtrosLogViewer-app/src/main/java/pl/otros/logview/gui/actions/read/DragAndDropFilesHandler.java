@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,14 +15,17 @@
  ******************************************************************************/
 package pl.otros.logview.gui.actions.read;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.VFS;
-import pl.otros.logview.gui.OtrosApplication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.importer.LogImporter;
 import pl.otros.logview.gui.actions.TailLogActionListener;
 import pl.otros.logview.importer.DetectOnTheFlyLogImporter;
-import pl.otros.logview.importer.LogImporter;
 
 import javax.swing.*;
 import java.awt.datatransfer.DataFlavor;
@@ -35,14 +38,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for global drag-and-drop operations.
- * 
+ * <p>
  * Currently supports dropping possibly multiple log files that are then opened by autodetection.
- * 
+ *
  * @author murat
  */
 public class DragAndDropFilesHandler extends TransferHandler {
@@ -52,13 +54,13 @@ public class DragAndDropFilesHandler extends TransferHandler {
 
   private static final long serialVersionUID = 3830464109280595888L;
 
-  static final Logger LOGGER = Logger.getLogger(DragAndDropFilesHandler.class.getName());
-	private OtrosApplication otrosApplication;
+  private static final Logger LOGGER = LoggerFactory.getLogger(DragAndDropFilesHandler.class.getName());
+  private final OtrosApplication otrosApplication;
 
 
-	public DragAndDropFilesHandler(OtrosApplication otrosApplication) {
-		this.otrosApplication = otrosApplication;
-	}
+  public DragAndDropFilesHandler(OtrosApplication otrosApplication) {
+    this.otrosApplication = otrosApplication;
+  }
 
   @Override
   public boolean canImport(TransferSupport support) {
@@ -111,22 +113,22 @@ public class DragAndDropFilesHandler extends TransferHandler {
   public boolean importData(TransferSupport support) {
 
     if (isURL(support)) {
-      LOGGER.finest("Importing URL");
+      LOGGER.trace("Importing URL");
       return importUrl(support);
     }
 
     if (isUriList(support)) {
-      LOGGER.finest("Importing URI list");
+      LOGGER.trace("Importing URI list");
       return importUriList(support);
     }
 
     if (isText(support)) {
-      LOGGER.finest("Importing text");
+      LOGGER.trace("Importing text");
       return importString(support);
     }
 
     if (isListOfFiles(support)) {
-      LOGGER.finest("Importing list of files");
+      LOGGER.trace("Importing list of files");
       return importListOfFiles(support);
     }
 
@@ -137,7 +139,7 @@ public class DragAndDropFilesHandler extends TransferHandler {
     try {
       return tryToImportListOfFiles(support);
     } catch (RuntimeException e) {
-      LOGGER.log(Level.SEVERE, "Problem dropping files on the GUI: " + e.getMessage(), e);
+      LOGGER.error("Problem dropping files on the GUI: " + e.getMessage(), e);
       JOptionPane.showMessageDialog(null, "Problem during drag-and-drop of files: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       return false;
     }
@@ -166,7 +168,7 @@ public class DragAndDropFilesHandler extends TransferHandler {
       tryToImportString(support);
       return true;
     } catch (RuntimeException e) {
-      LOGGER.log(Level.SEVERE, "Problem dropping something on the GUI: " + e.getMessage(), e);
+      LOGGER.error("Problem dropping something on the GUI: " + e.getMessage(), e);
       JOptionPane.showMessageDialog(null, "Problem during drag-and-drop of strings: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       return false;
     }
@@ -177,11 +179,11 @@ public class DragAndDropFilesHandler extends TransferHandler {
       tryToImportUrl(support);
       return true;
     } catch (RuntimeException e) {
-      LOGGER.log(Level.SEVERE, "Problem dropping something on the GUI: " + e.getMessage(), e);
+      LOGGER.error("Problem dropping something on the GUI: " + e.getMessage(), e);
       JOptionPane.showMessageDialog(null, "Problem during drag-and-drop of strings: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       return false;
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Problem dropping something on the GUI: " + e.getMessage(), e);
+      LOGGER.error("Problem dropping something on the GUI: " + e.getMessage(), e);
       JOptionPane.showMessageDialog(null, "Problem during drag-and-drop of strings: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       return false;
     }
@@ -192,20 +194,18 @@ public class DragAndDropFilesHandler extends TransferHandler {
       tryToImportUriList(support);
       return true;
     } catch (RuntimeException e) {
-      LOGGER.log(Level.SEVERE, "Problem dropping something on the GUI: " + e.getMessage(), e);
+      LOGGER.error("Problem dropping something on the GUI: " + e.getMessage(), e);
       JOptionPane.showMessageDialog(null, "Problem during drag-and-drop of strings: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       return false;
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Problem dropping something on the GUI: " + e.getMessage(), e);
+      LOGGER.error("Problem dropping something on the GUI: " + e.getMessage(), e);
       JOptionPane.showMessageDialog(null, "Problem during drag-and-drop of strings: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       return false;
     }
   }
 
   private void tryToImportString(TransferSupport support) {
-    for (FileObject file : getFileObjects(support)) {
-      openLogFile(file);
-    }
+    getFileObjects(support).forEach(this::openLogFile);
   }
 
   private void tryToImportUrl(TransferSupport support) throws UnsupportedFlavorException, IOException, ClassNotFoundException {
@@ -230,19 +230,17 @@ public class DragAndDropFilesHandler extends TransferHandler {
   }
 
   private List<FileObject> getFileObjects(TransferSupport support) {
-    List<FileObject> files = new ArrayList<FileObject>();
-    for (String uriString : getFileUris(support)) {
-      files.add(getFileObjectForLocalFile(getFileForUriString(uriString)));
-    }
-    return files;
+    return getFileUris(support).stream()
+      .map(uriString -> getFileObjectForLocalFile(getFileForUriString(uriString)))
+      .collect(Collectors.toList());
   }
 
   public List<String> getFileUris(TransferSupport support) {
-    BufferedReader reader = null;
-    List<String> files = new ArrayList<String>();
-    try {
-      reader = new BufferedReader(DataFlavor.selectBestTextFlavor(support.getDataFlavors()).getReaderForText(support.getTransferable()));
-      String uri = null;
+    List<String> files = new ArrayList<>();
+    try (BufferedReader reader =
+           new BufferedReader(
+             DataFlavor.selectBestTextFlavor(support.getDataFlavors()).getReaderForText(support.getTransferable()))) {
+      String uri;
       while ((uri = reader.readLine()) != null) {
         files.add(uri);
       }
@@ -263,13 +261,13 @@ public class DragAndDropFilesHandler extends TransferHandler {
   }
 
   private File getFileForUriString(String uriString) {
-    LOGGER.finest(String.format("Creating uri for %s", uriString));
+    LOGGER.trace(String.format("Creating uri for %s", uriString));
     return new File(URI.create(uriString));
   }
 
   private void openLogFile(FileObject file) {
-		Collection<LogImporter> importers = otrosApplication.getAllPluginables().getLogImportersContainer().getElements();
-		LogImporter importer = new DetectOnTheFlyLogImporter(importers);
+    Collection<LogImporter> importers = otrosApplication.getAllPluginables().getLogImportersContainer().getElements();
+    LogImporter importer = new DetectOnTheFlyLogImporter(importers);
     TailLogActionListener tailLogActionListener = new TailLogActionListener(otrosApplication, importer);
     tailLogActionListener.openFileObjectInTailMode(file);
 

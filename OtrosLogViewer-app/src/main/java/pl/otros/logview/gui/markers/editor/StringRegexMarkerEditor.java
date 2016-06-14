@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,15 +16,15 @@
 package pl.otros.logview.gui.markers.editor;
 
 import org.apache.commons.io.IOUtils;
-import pl.otros.logview.LogData;
-import pl.otros.logview.MarkerColors;
-import pl.otros.logview.gui.markers.AutomaticMarker;
+import pl.otros.logview.api.model.LogData;
+import pl.otros.logview.api.model.MarkerColors;
+import pl.otros.logview.api.pluginable.AllPluginables;
+import pl.otros.logview.api.pluginable.AutomaticMarker;
+import pl.otros.logview.api.pluginable.PluginableElementsContainer;
 import pl.otros.logview.gui.markers.PropertyFileAbstractMarker;
 import pl.otros.logview.gui.markers.RegexMarker;
 import pl.otros.logview.gui.markers.StringMarker;
 import pl.otros.logview.gui.renderers.MarkerColorsComboBoxRenderer;
-import pl.otros.logview.pluginable.AllPluginables;
-import pl.otros.logview.pluginable.PluginableElementsContainer;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -41,35 +41,30 @@ import java.util.Properties;
 
 public class StringRegexMarkerEditor extends JPanel {
 
-  private JButton loadButton;
-  private JButton saveButton;
-  private JButton saveAsButton;
-  private JButton newButton;
-  private JFileChooser chooser;
-  private MarkerFileFilter fileFilterString;
-  private SaveEnableListener saveEnableListener;
+  private final JButton saveButton;
+  private final JFileChooser chooser;
+  private final MarkerFileFilter fileFilterString;
 
-  private JTextField condition;
-  private JTextField file;
-  private JTextField preCondition;
-  private JCheckBox ignoreCase;
-  private JCheckBox include;
-  private JTextField groups;
-  private JTextField name;
-  private JTextField description;
-  private JComboBox type;
-  private JComboBox colors;
-  private JLabel preConditionLabel = new JLabel("Precondition:");
-  private JLabel includeLabel = new JLabel("(Pre)condition matches:");
+  private final JTextField condition;
+  private final JTextField file;
+  private final JTextField preCondition;
+  private final JCheckBox ignoreCase;
+  private final JCheckBox include;
+  private final JTextField groups;
+  private final JTextField name;
+  private final JTextField description;
+  private final JComboBox<String> type;
+  private final JComboBox<MarkerColors> colors;
+  private final JLabel preConditionLabel = new JLabel("Precondition:");
 
-  private JTextField[] testFields;
+  private final JTextField[] testFields;
 
-  private JLabel[] testResults;
-  private PluginableElementsContainer<AutomaticMarker> markersContainser;
+  private final JLabel[] testResults;
+  private final PluginableElementsContainer<AutomaticMarker> markersContainer;
 
   public StringRegexMarkerEditor() {
-    markersContainser = AllPluginables.getInstance().getMarkersContainser();
-    saveEnableListener = new SaveEnableListener();
+    markersContainer = AllPluginables.getInstance().getMarkersContainser();
+    SaveEnableListener saveEnableListener = new SaveEnableListener();
     chooser = new JFileChooser("./plugins/markers");
     chooser.setMultiSelectionEnabled(false);
     fileFilterString = new MarkerFileFilter();
@@ -80,31 +75,20 @@ public class StringRegexMarkerEditor extends JPanel {
     this.setLayout(bagLayout);
     TestAfterChangeActionListener testAfterChangeActionListener = new TestAfterChangeActionListener();
 
-    loadButton = new JButton("Load");
+    JButton loadButton = new JButton("Load");
     loadButton.addActionListener(new LoadctionListener());
     saveButton = new JButton("Save");
     saveButton.addActionListener(new SaveActionListener());
-    saveAsButton = new JButton("Save as");
+    JButton saveAsButton = new JButton("Save as");
     saveAsButton.addActionListener(new SaveAsActionListener());
-    newButton = new JButton("New");
+    JButton newButton = new JButton("New");
     newButton.addActionListener(new NewMarkerActionListener());
 
-    type = new JComboBox(new String[] { "String matcher", "Regex matcher" });
-    type.addActionListener(new ActionListener() {
+    type = new JComboBox<>(new String[]{ "String matcher", "Regex matcher" });
 
-      @Override
-      public void actionPerformed(ActionEvent arg0) {
-        if (type.getSelectedIndex() == 0) {
-          preConditionLabel.setEnabled(false);
-          preCondition.setEnabled(false);
-        } else {
-          preConditionLabel.setEnabled(true);
-          preCondition.setEnabled(true);
-        }
-      }
-    });
     type.addActionListener(testAfterChangeActionListener);
     type.addActionListener(saveEnableListener);
+
     int testLines = 3;
     testFields = new JTextField[3];
     testResults = new JLabel[3];
@@ -129,8 +113,19 @@ public class StringRegexMarkerEditor extends JPanel {
     include.addActionListener(testAfterChangeActionListener);
     groups = new JTextField(20);
 
-    colors = new JComboBox(MarkerColors.values());
+    colors = new JComboBox<>(MarkerColors.values());
     colors.setRenderer(new MarkerColorsComboBoxRenderer());
+
+
+    type.addActionListener(arg0 -> {
+      if (type.getSelectedIndex() == 0) {
+        preConditionLabel.setEnabled(false);
+        preCondition.setEnabled(false);
+      } else {
+        preConditionLabel.setEnabled(true);
+        preCondition.setEnabled(true);
+      }
+    });
 
     c.gridwidth = 1;
     c.insets = new Insets(4, 4, 4, 4);
@@ -161,6 +156,7 @@ public class StringRegexMarkerEditor extends JPanel {
     c.gridy++;
     this.addFormLabelsLeftLong(new JLabel("Ignore case:"), ignoreCase, c);
     c.gridy++;
+    JLabel includeLabel = new JLabel("(Pre)condition matches:");
     this.addFormLabelsLeftLong(includeLabel, include, c);
     c.gridy++;
     this.addFormLabelsLeftLong(new JLabel("Color"), colors, c);
@@ -203,8 +199,8 @@ public class StringRegexMarkerEditor extends JPanel {
   }
 
   private void testMarker() {
-    for (int i = 0; i < testResults.length; i++) {
-      testResults[i].setText("?");
+    for (JLabel testResult : testResults) {
+      testResult.setText("?");
     }
     try {
       AutomaticMarker marker = null;
@@ -310,9 +306,8 @@ public class StringRegexMarkerEditor extends JPanel {
       }
       file.setText(chooser.getSelectedFile().getAbsolutePath());
       Properties p = new Properties();
-      FileInputStream fin;
-      try {
-        fin = new FileInputStream(chooser.getSelectedFile());
+
+      try (FileInputStream fin = new FileInputStream(chooser.getSelectedFile())) {
         p.load(fin);
         if (file.getText().endsWith("stringMarker")) {
           type.setSelectedIndex(0);
@@ -329,7 +324,6 @@ public class StringRegexMarkerEditor extends JPanel {
         condition.setText(p.getProperty(RegexMarker.CONDITION, ""));
         colors.getModel().setSelectedItem(MarkerColors.fromString(p.getProperty(PropertyFileAbstractMarker.COLOR, "")));
       } catch (Exception e1) {
-        // TODO Auto-generated catch block
         e1.printStackTrace();
       }
     }
@@ -340,17 +334,17 @@ public class StringRegexMarkerEditor extends JPanel {
     private String description;
     private String suffix;
 
-    void switchToStringOnly() {
+    private void switchToStringOnly() {
       suffix = ".stringMarker";
       description = "String marker (*.stringMarker)";
     }
 
-    void switchToRegexOnly() {
+    private void switchToRegexOnly() {
       suffix = ".regexMarker";
       description = "Regular expression marker (*.regexMarker)";
     }
 
-    void switchToBoth() {
+    private void switchToBoth() {
       suffix = "Marker";
       description = "String or regular expression marker (*.stringMarker, *.regexMarker)";
     }
@@ -361,10 +355,7 @@ public class StringRegexMarkerEditor extends JPanel {
 
     @Override
     public boolean accept(File f) {
-      if (f.isDirectory() || f.getName().endsWith(suffix)) {
-        return true;
-      }
-      return false;
+      return f.isDirectory() || f.getName().endsWith(suffix);
     }
 
     @Override
@@ -424,7 +415,7 @@ public class StringRegexMarkerEditor extends JPanel {
       newMarker = new RegexMarker(p);
     }
 
-    markersContainser.addElement(newMarker);
+    markersContainer.addElement(newMarker);
   }
 
   private Properties getMarkerProperties() {

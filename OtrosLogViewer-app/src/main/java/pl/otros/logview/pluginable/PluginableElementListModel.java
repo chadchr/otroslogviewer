@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 Krzysztof Otrebski
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 package pl.otros.logview.pluginable;
+
+import pl.otros.logview.api.pluginable.PluginableElement;
+import pl.otros.logview.api.pluginable.PluginableElementEventListener;
+import pl.otros.logview.api.pluginable.PluginableElementsContainer;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -23,15 +27,15 @@ import java.util.Comparator;
 
 public class PluginableElementListModel<T extends PluginableElement> extends AbstractListModel implements PluginableElementEventListener<T> {
 
-  private ArrayList<T> list;
-  private Comparator<T> pluginableElementByNameComparator;
-  private PluginableElementsContainer<T> container;
+  private final ArrayList<T> list;
+  private final Comparator<T> pluginableElementByNameComparator;
+  private final PluginableElementsContainer<T> container;
 
   public PluginableElementListModel(PluginableElementsContainer<T> container) {
     this.container = container;
     Collection<T> pluginablesList = container.getElements();
-    list = new ArrayList<T>(pluginablesList.size());
-    pluginableElementByNameComparator = new PlugiableByNameComparator<T>();
+    list = new ArrayList<>(pluginablesList.size());
+    pluginableElementByNameComparator = new PlugiableByNameComparator<>();
     list.addAll(pluginablesList);
     Collections.sort(list, pluginableElementByNameComparator);
     container.addListener(this);

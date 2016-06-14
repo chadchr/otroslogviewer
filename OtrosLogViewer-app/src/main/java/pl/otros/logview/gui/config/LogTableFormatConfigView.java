@@ -1,8 +1,61 @@
 package pl.otros.logview.gui.config;
 
-import com.google.common.base.Joiner;
-import jsyntaxpane.DefaultSyntaxKit;
-import net.miginfocom.swing.MigLayout;
+import static javax.swing.JOptionPane.CANCEL_OPTION;
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
+import static javax.swing.JOptionPane.OK_OPTION;
+import static javax.swing.JOptionPane.PLAIN_MESSAGE;
+import static javax.swing.JOptionPane.YES_NO_OPTION;
+import static javax.swing.JOptionPane.showConfirmDialog;
+import static javax.swing.JOptionPane.showInputDialog;
+import static javax.swing.JOptionPane.showMessageDialog;
+import static javax.swing.SwingConstants.LEFT;
+import static javax.swing.SwingConstants.VERTICAL;
+import static pl.otros.logview.api.ConfKeys.LOG_TABLE_FORMAT_DATE_FORMAT;
+import static pl.otros.logview.api.ConfKeys.LOG_TABLE_FORMAT_LEVEL_RENDERER;
+import static pl.otros.logview.api.ConfKeys.LOG_TABLE_FORMAT_PACKAGE_ABBREVIATIONS;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DataConfiguration;
@@ -10,14 +63,19 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemException;
 import org.jdesktop.swingx.JXComboBox;
 import org.jdesktop.swingx.JXRadioGroup;
-import pl.otros.logview.gui.ConfKeys;
-import pl.otros.logview.gui.Icons;
-import pl.otros.logview.gui.OtrosApplication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+
+import jsyntaxpane.DefaultSyntaxKit;
+import net.miginfocom.swing.MigLayout;
+import pl.otros.logview.api.OtrosApplication;
+import pl.otros.logview.api.gui.Icons;
+import pl.otros.logview.api.io.Utils;
 import pl.otros.logview.gui.renderers.LevelRenderer;
-import pl.otros.logview.io.Utils;
 import pl.otros.swing.config.AbstractConfigView;
 import pl.otros.swing.config.InMainConfig;
 import pl.otros.swing.config.ValidationResult;
@@ -26,51 +84,19 @@ import pl.otros.swing.table.ColumnLayout;
 import pl.otros.vfs.browser.JOtrosVfsBrowserDialog;
 import pl.otros.vfs.browser.SelectionMode;
 
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static javax.swing.JOptionPane.*;
-import static javax.swing.SwingConstants.LEFT;
-import static javax.swing.SwingConstants.VERTICAL;
-import static pl.otros.logview.gui.ConfKeys.*;
-
 public class LogTableFormatConfigView extends AbstractConfigView implements InMainConfig {
 
   public static final String DEFAULT_ABBREVIATION_HEADER =
-      "#You can define abbreviations for the packages you use\n" +
-          "#put here package abbreviations like in Eclipse (http://java.dzone.com/articles/eclipse-tip-help-tidy-package)\n" +
-          "my.package.project={MP}\n\n";
+    "#You can define abbreviations for the packages you use\n" +
+      "#put here package abbreviations like in Eclipse (http://java.dzone.com/articles/eclipse-tip-help-tidy-package)\n" +
+      "my.package.project={MP}\n\n";
   public static final String ACTION_RENAME = "rename";
   public static final String ACTION_DELETE = "delete";
   public static final String COL_LAYOUT = "colLayout";
   public static final String ACTION_COPY_SELECTED = "copy";
   public static final String ACTION_PASTE = "paste";
   public static final String VIEW_ID = "logDisplay";
-  private static final Logger LOGGER = Logger.getLogger(LogTableFormatConfigView.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(LogTableFormatConfigView.class.getName());
   private final String[] dateFormats;
   private final JXRadioGroup radioGroup;
   private final JXComboBox dateFormatRadio;
@@ -78,7 +104,7 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
   private final JEditorPane packageAbbreviationTa;
   private final JList columnLayoutsList;
   private MutableListModel<ColumnLayout> columnLayoutListModel;
-  private OtrosApplication otrosApplication;
+  private final OtrosApplication otrosApplication;
   private JOtrosVfsBrowserDialog jOtrosVfsBrowserDialog;
 
   public LogTableFormatConfigView(final OtrosApplication otrosApplication) {
@@ -87,24 +113,19 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
     panel = new JPanel();
     panel.setLayout(new MigLayout());
     dateFormats = new String[]{
-        "HH:mm:ss", //
-        "HH:mm:ss.SSS",//
-        "dd-MM HH:mm:ss.SSS",//
-        "E HH:mm:ss", //
-        "E HH:mm:ss.SS", //
-        "MMM dd. HH:mm:ss",//
+      "HH:mm:ss", //
+      "HH:mm:ss.SSS",//
+      "dd-MM HH:mm:ss.SSS",//
+      "E HH:mm:ss", //
+      "E HH:mm:ss.SS", //
+      "MMM dd. HH:mm:ss",//
     };
     dateFormatRadio = new JXComboBox(dateFormats);
     addLabel("Date format", 'd', dateFormatRadio, panel);
     final JTextField exampleTextField = new JTextField(20);
     exampleTextField.setEditable(false);
     addLabel("Format example", 'e', exampleTextField, panel);
-    dateFormatRadio.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        exampleTextField.setText(new SimpleDateFormat(dateFormatRadio.getSelectedItem().toString()).format(new Date()));
-      }
-    });
+    dateFormatRadio.addActionListener(e -> exampleTextField.setText(new SimpleDateFormat(dateFormatRadio.getSelectedItem().toString()).format(new Date())));
     dateFormatRadio.setSelectedIndex(0);
     radioGroup = new JXRadioGroup(LevelRenderer.Mode.values());
     addLabel("Level display", 'l', radioGroup, panel);
@@ -122,7 +143,7 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
 
     //Column layouts
     final JPanel columnLayoutsPanel = new JPanel(new BorderLayout());
-    columnLayoutListModel = new MutableListModel<ColumnLayout>();
+    columnLayoutListModel = new MutableListModel<>();
 
     columnLayoutsList = new JList(columnLayoutListModel);
     columnLayoutsList.setToolTipText("Click right mouse button to edit or delete");
@@ -152,13 +173,10 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
         }
       }
     };
-    columnLayoutsList.addListSelectionListener(new ListSelectionListener() {
-      @Override
-      public void valueChanged(ListSelectionEvent listSelectionEvent) {
-        boolean selected = columnLayoutsList.getSelectedIndices().length > 0;
-        renameAction.setEnabled(selected);
-        deleteAction.setEnabled(selected);
-      }
+    columnLayoutsList.addListSelectionListener(listSelectionEvent -> {
+      boolean selected = columnLayoutsList.getSelectedIndices().length > 0;
+      renameAction.setEnabled(selected);
+      deleteAction.setEnabled(selected);
     });
     renameAction.setEnabled(false);
     deleteAction.setEnabled(false);
@@ -232,7 +250,7 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
   }
 
   public static List<ColumnLayout> loadColumnLayouts(Configuration configuration) {
-    List<ColumnLayout> layouts = new ArrayList<ColumnLayout>();
+    List<ColumnLayout> layouts = new ArrayList<>();
     DataConfiguration dc = new DataConfiguration(configuration);
     final int count = dc.getInt(COL_LAYOUT + ".count", 0);
     for (int i = 0; i < count; i++) {
@@ -251,10 +269,10 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
     return jOtrosVfsBrowserDialog;
   }
 
-  private void importFromFile(FileObject file) throws ConfigurationException, FileSystemException {
-    try {
+  private void importFromFile(FileObject file) throws ConfigurationException, IOException {
+    try (InputStream is = file.getContent().getInputStream()) {
       final XMLConfiguration xmlConfiguration = new XMLConfiguration();
-      xmlConfiguration.load(file.getContent().getInputStream());
+      xmlConfiguration.load(is);
       final List<ColumnLayout> columnLayouts = loadColumnLayouts(xmlConfiguration);
       importColumnLayouts(columnLayouts);
       otrosApplication.getStatusObserver().updateStatus(String.format("Column layouts have been imported from %s", file.getName().getFriendlyURI()));
@@ -274,21 +292,19 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
       importColumnLayouts(columnLayouts);
       otrosApplication.getStatusObserver().updateStatus("Column layouts have been imported");
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Can't import table layout from clipboard", e);
-      JOptionPane.showMessageDialog(panel.getRootPane(), "Can't import from clipboard");
+      LOGGER.error("Can't import table layout from clipboard", e);
+      showMessageDialog(panel.getRootPane(), "Can't import from clipboard");
     }
   }
 
   private void importColumnLayouts(List<ColumnLayout> columnLayouts) {
     if (columnLayouts.isEmpty()) {
-      JOptionPane.showMessageDialog(panel.getRootPane(), "No column layout in clipboard have been found");
+      showMessageDialog(panel.getRootPane(), "No column layout in clipboard have been found");
       return;
     }
     JPanel messagePanel = new JPanel(new BorderLayout());
-    final MutableListModel<ColumnLayout> listModel = new MutableListModel<ColumnLayout>();
-    for (ColumnLayout columnLayout : columnLayouts) {
-      listModel.add(columnLayout);
-    }
+    final MutableListModel<ColumnLayout> listModel = new MutableListModel<>();
+    columnLayouts.forEach(listModel::add);
 
     final JList jList = new JList(listModel);
     jList.setCellRenderer(new ColumnLayoutRenderer());
@@ -297,9 +313,9 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
       jList.getSelectionModel().setSelectionInterval(0, listModel.getSize() - 1);
     }
     messagePanel.add(new JScrollPane(jList));
-    final int resp = JOptionPane.showConfirmDialog(LogTableFormatConfigView.this.panel.getRootPane(), messagePanel, "Select column layouts to import",
-        JOptionPane.OK_CANCEL_OPTION);
-    if (resp == JOptionPane.CANCEL_OPTION) {
+    final int resp = showConfirmDialog(LogTableFormatConfigView.this.panel.getRootPane(), messagePanel, "Select column layouts to import",
+      OK_CANCEL_OPTION);
+    if (resp == CANCEL_OPTION) {
       return;
     }
 
@@ -352,14 +368,12 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
     String dateFormat = StringUtils.defaultIfBlank(configuration.getString(LOG_TABLE_FORMAT_DATE_FORMAT), dateFormats[1]);
     dateFormatRadio.setSelectedItem(dateFormat);
 
-    packageAbbreviationTa.setText(configuration.getString(ConfKeys.LOG_TABLE_FORMAT_PACKAGE_ABBREVIATIONS, DEFAULT_ABBREVIATION_HEADER));
+    packageAbbreviationTa.setText(configuration.getString(LOG_TABLE_FORMAT_PACKAGE_ABBREVIATIONS, DEFAULT_ABBREVIATION_HEADER));
     packageAbbreviationTa.setCaretPosition(packageAbbreviationTa.getText().length());
 
-    columnLayoutListModel = new MutableListModel<ColumnLayout>();
+    columnLayoutListModel = new MutableListModel<>();
     columnLayoutsList.setModel(columnLayoutListModel);
-    for (ColumnLayout layout : loadColumnLayouts(configuration)) {
-      columnLayoutListModel.add(layout);
-    }
+    loadColumnLayouts(configuration).forEach(columnLayoutListModel::add);
   }
 
   @Override
@@ -394,7 +408,7 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
       try {
-        List<ColumnLayout> list = new ArrayList<ColumnLayout>();
+        List<ColumnLayout> list = new ArrayList<>();
         final Object[] selectedValues = LogTableFormatConfigView.this.columnLayoutsList.getSelectedValues();
         if (selectedValues.length == 0) {
           list.addAll(columnLayoutListModel.getList());
@@ -405,9 +419,9 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
         }
         exportToClipBoard(list);
       } catch (ConfigurationException e) {
-        LOGGER.log(Level.SEVERE, "Can't export column layouts. ", e);
-        JOptionPane.showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't export column layout to clipboard: " + e.getMessage(),
-            "Export error", JOptionPane.ERROR_MESSAGE);
+        LOGGER.error("Can't export column layouts. ", e);
+        showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't export column layout to clipboard: " + e.getMessage(),
+          "Export error", ERROR_MESSAGE);
       }
     }
   }
@@ -430,9 +444,11 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
         try {
           exportToFile(selectedFile, columnLayoutListModel.getList());
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Can't export column layouts to file " + selectedFile, e);
-          JOptionPane.showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't export column layout to file: " + e.getMessage(), "Export error", JOptionPane
-              .ERROR_MESSAGE);
+          LOGGER.error("Can't export column layouts to file " + selectedFile, e);
+          showMessageDialog(columnLayoutsPanel.getRootPane(),
+            "Can't export column layout to file: " + e.getMessage(),
+            "Export error",
+            ERROR_MESSAGE);
         }
       }
     }
@@ -452,9 +468,9 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
       try {
         importFromClipboard();
       } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "Can't import column layout from clipboard", e);
-        JOptionPane.showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't import column layout from clipboard: " + e.getMessage(),
-            "Paste error", JOptionPane.ERROR_MESSAGE);
+        LOGGER.error("Can't import column layout from clipboard", e);
+        showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't import column layout from clipboard: " + e.getMessage(),
+          "Paste error", ERROR_MESSAGE);
       }
     }
   }
@@ -481,14 +497,15 @@ public class LogTableFormatConfigView extends AbstractConfigView implements InMa
         final FileObject selectedFile = dialog.getSelectedFile();
         try {
           importFromFile(selectedFile);
+          Utils.closeQuietly(dialog.getSelectedFile());
         } catch (ConfigurationException e) {
-          LOGGER.log(Level.SEVERE, "Can't import column layout from file", e);
-          JOptionPane.showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't import column layout from clipboard: " + e.getMessage(), "Import error",
-              JOptionPane.ERROR_MESSAGE);
-        } catch (FileSystemException e) {
-          LOGGER.log(Level.SEVERE, "Can't import column layout from file", e);
-          JOptionPane.showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't import column layout from clipboard: " + e.getMessage(), "Import error",
-              JOptionPane.ERROR_MESSAGE);
+          LOGGER.error("Can't import column layout from file", e);
+          showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't import column layout from clipboard: " + e.getMessage(), "Import error",
+            ERROR_MESSAGE);
+        } catch (IOException e) {
+          LOGGER.error("Can't import column layout from file", e);
+          showMessageDialog(columnLayoutsPanel.getRootPane(), "Can't import column layout from clipboard: " + e.getMessage(), "Import error",
+            ERROR_MESSAGE);
         }
       }
     }
